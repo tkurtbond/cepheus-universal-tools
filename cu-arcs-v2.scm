@@ -43,6 +43,31 @@
                ((9 . 11) "Killer")
                ((12) "Siren")))
 
+;; Starport, Cepheus Universal p. 326. A Major Race always gets Class A
+;; regardless of the 1D6 roll -- modeled here as a single range covering
+;; every possible roll, so it still fits the keyed-roll-table shape.
+(define-keyed-roll-table (starport-name major-or-minor roll)
+  ('Major ((1 . 6) "A"))
+  ('Minor ((1 . 2) "X")
+          ((3) "E")
+          ((4) "D")
+          ((5) "C")
+          ((6) "B")))
+
+;; Government, Cepheus Universal p. 326.
+(define-formula-table (government-formula roll)
+  ((1 . 3) (1 6 1))
+  ((4 . 6) (1 6 7)))
+
+;; Tech Level, Cepheus Universal p. 326. Major Race ignores the roll
+;; entirely (a flat 1D6+9) -- modeled, as with Starport, as a single
+;; range covering every possible roll.
+(define-keyed-formula-table (tech-level-formula major-or-minor roll)
+  ('Major ((1 . 6) (1 6 9)))
+  ('Minor ((1 . 3) (1 3 0))
+          ((4 . 5) (1 3 3))
+          ((6) (1 3 6))))
+
 (define-session-page (main-page-path)
   (lambda ()
     `((h3 "Alien Race Creation - Major or Minor Race")
@@ -188,31 +213,7 @@ if Major race choose 8-10")
                              (min 6)
                              (max 10))))
 
-               (li (b "Government")
-                   (br)
-                   (input (@ (type "radio")
-                             (id "government-roll")
-                             (name "government")
-                             (value "Roll")
-                             (checked)))
-                   (label (@ (for "government-roll"))
-                          "Roll 1D6, then on 1-3 roll 1D6+1
-or on 4-6 roll 1D6+7")                  
-                   (br)
-                   (input (@ (type "radio")
-                             (id "government-choose")
-                             (name "government")
-                             (value "Choose")))
-                   (label (@ (for "government-choose"))
-                          "Choose from 2-7 or 8-13")
-                   " "
-                   (label (@ (for "chosen-government"))
-                          "Chosen Goverment:")
-                   (input (@ (type "number")
-                             (id "chosen-government")
-                             (name "chosen-government")
-                             (min 2)
-                             (max 13))))
+               ,(formula-field-li 'government "Government" 1 6 (government-formula))
 
                (li (b "Law Level")
                    (br)
@@ -239,67 +240,9 @@ or on 4-6 roll 1D6+7")
                              (min 0)
                              (max 10))))
 
-               (li (b "Tech Level")
-                   (br)
-                   (input (@ (type "radio")
-                             (id "tech-level-roll")
-                             (name "tech-level")
-                             (value "Roll")
-                             (checked)))
-                   (label (@ (for "tech-level-roll"))
-                          "If Major Race roll 1D6+9, otherwise "
-                          "If Minor Race roll 1D6, then "
-                          "on 1-3 Primitive, roll 1D3, "
-                          "on 4-5 Low Tech, roll 1D3+3, "
-                          "on 6 Mid Tech, roll 1D3+6")
-                   (br)
-                   (input (@ (type "radio")
-                             (id "tech-level-choose")
-                             (name "tech-level")
-                             (value "Choose")))
-                   (label (@ (for "tech-level-choose"))
-                          "Major Race: Choose 10-15, otherwise "
-                          "Minor Race: Choose Primitive 1-3, Low Tech 4-6,
-Mid Tech 7-9")
-                   " "
-                   (label (@ (for "chosen-tech-level"))
-                          "Chosen Tech Level:")
-                   (input (@ (type "number")
-                             (id "chosen-tech-level")
-                             (name "chosen-tech-level")
-                             (min 1)
-                             (max 15))))
+               ,(keyed-formula-field-li 'tech-level "Tech Level" 1 6 "Major or Minor Race" (tech-level-formula))
 
-               (li (b "Starport")
-                   (br)
-                   (input (@ (type "radio")
-                             (id "starport-roll")
-                             (name "starport")
-                             (value "Roll")
-                             (checked)))
-                   (label (@ (for "starport-roll"))
-                          "If Major Race Class A, otherwise "
-                          "If Minor Race roll 1D6, then "
-                          "on 1-2 Class X, "
-                          "on 3 Class E, "
-                          "on 4 Class D, "
-                          "on 5 Class C, "
-                          "on 6 Class B")
-                   (br)
-                   (input (@ (type "radio")
-                             (id "starport-choose")
-                             (name "starport")
-                             (value "Choose")))
-                   (label (@ (for "starport-choose"))
-                          "Major Race: Class A; otherwise "
-                          "Minor Race: Choose X, E, D, C, or B")
-                   " "
-                   (label (@ (for "chosen-starport"))
-                          "Chosen Tech Level:")
-                   (input (@ (type "text")
-                             (id "chosen-starport")
-                             (name "chosen-starport")
-                             (pattern "[XxEeDdCcBb]")))))
+               ,(keyed-roll-field-li 'starport "Starport" 1 6 "Major or Minor Race" (starport-name)))
               (br)
               (input (@ (type "submit")
                         (value "Submit")))
@@ -332,46 +275,16 @@ Mid Tech 7-9")
                                (+ (D 3) 7))
                            (string->number ($ "chosen-population"))))
     ($session-set! 'population population)
-    (define government (if (string=? ($ "government") "Roll")
-                           (if (<= 1 (D 6) 3)
-                               (+ (D 6) 1)
-                               (+ (D 6) 7))
-                           (string->number ($ "chosen-government"))))
+    (define government (resolve-formula-field government government-formula (D 6)))
     ($session-set! 'government government)
 
     (define law-level (if (string=? ($ "law-level") "Roll")
                           (- (nD 2 6) 2)
                           (string->number ($ "chosen-law-level"))))
     ($session-set! 'law-level law-level)
-    (define tech-level (if (string=? ($ "tech-level") "Roll")
-                           (if (eq? major-or-minor 'Major)
-                               (+ (D 6) 9)
-                               (let ((roll (D 6)))
-                                 (cond ((<= 1 roll 3)
-                                        (D 3))
-                                       ((<= 4 roll 5)
-                                        (+ (D 3) 3))
-                                       ((= roll 6)
-                                        (+ (D 3) 6))
-                                       (else
-                                        (error "Impossible in tech-level")))))
-                           (string->number ($ "chosen-tech-level"))))
+    (define tech-level (resolve-keyed-formula-field tech-level tech-level-formula major-or-minor (D 6)))
     ($session-set! 'tech-level tech-level)
-    (define starport (if (string=? ($ "starport") "Roll")
-                         (if (eq? major-or-minor 'Major)
-                             "A"
-                             (let ((roll (D 6)))
-                               (cond ((<= 1 roll 2)
-                                      "X")
-                                     ((= roll 3)
-                                      "E")
-                                     ((= roll 4)
-                                      "D")
-                                     ((= roll 5)
-                                      "C")
-                                     ((= roll 6)
-                                      "B"))))
-                         (string-upcase ($ "chosen-starport"))))
+    (define starport (resolve-keyed-field starport starport-name major-or-minor (D 6)))
     ($session-set! 'starport starport)
                              
     `((h3 "The story so far")

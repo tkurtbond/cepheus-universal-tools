@@ -206,3 +206,171 @@
      (lookup key (if (string=? ($ (symbol->string 'field)) "Roll")
                      dice-expr
                      (string->number ($ (string-append "chosen-" (symbol->string 'field)))))))))
+
+;; -------------------------------------------------------------------
+;; Formula tables: like roll tables, but a range selects a further dice
+;; ROLL (e.g. "1D3+3") rather than a fixed value, such as the Government
+;; and Tech Level tables (Cepheus Universal p. 326). A formula-spec is
+;; the literal list (dice-count dice-sides modifier), meaning
+;; dice-count D dice-sides + modifier; it must be literal numbers (not
+;; expressions) so the table can be described in prose without actually
+;; rolling any dice. Requires `nD' (num-dice, num-sides -> sum) to be
+;; defined by the including file.
+
+(define (formula-value spec)
+  (+ (caddr spec) (nD (car spec) (cadr spec))))
+
+(define (formula-min spec) (+ (caddr spec) (car spec)))
+(define (formula-max spec) (+ (caddr spec) (* (car spec) (cadr spec))))
+
+(define (formula-text spec)
+  (let ((count (car spec)) (sides (cadr spec)) (modifier (caddr spec)))
+    (string-append (number->string count) "D" (number->string sides)
+                    (cond ((> modifier 0) (string-append "+" (number->string modifier)))
+                          ((< modifier 0) (number->string modifier))
+                          (else "")))))
+
+;; (define-formula-table (name roll) (range formula-spec) ...)
+;;
+;; Defines `name' as a procedure of 0 or 1 arguments, as define-roll-table
+;; does, except (name roll) rolls the selected formula and returns the
+;; result, e.g. the Government table:
+;;
+;;   (define-formula-table (government-formula roll)
+;;     ((1 . 3) (1 6 1))    ; 1-3: 1D6+1
+;;     ((4 . 6) (1 6 7)))   ; 4-6: 1D6+7
+(define-syntax define-formula-table
+  (syntax-rules ()
+    ((_ (name roll) (range (dice-count dice-sides modifier)) ...)
+     (define name
+       (case-lambda
+         (() (list (cons 'range (list dice-count dice-sides modifier)) ...))
+         ((roll) (cond ((range-test roll range)
+                        (formula-value (list dice-count dice-sides modifier)))
+                       ...
+                       (else (error 'name "roll out of range" roll)))))))))
+
+;; (define-keyed-formula-table (name key roll) (key-value (range formula-spec) ...) ...)
+;;
+;; As define-formula-table, keyed on a prior result. Tech Level ignores
+;; the roll entirely for a Major Race (a flat 1D6+9) -- modeled, as with
+;; Starport, as a single range covering every possible roll:
+;;
+;;   (define-keyed-formula-table (tech-level-formula major-or-minor roll)
+;;     ('Major ((1 . 6) (1 6 9)))
+;;     ('Minor ((1 . 3) (1 3 0))
+;;             ((4 . 5) (1 3 3))
+;;             ((6) (1 3 6))))
+(define-syntax define-keyed-formula-table
+  (syntax-rules ()
+    ((_ (name key roll) (key-value (range (dice-count dice-sides modifier)) ...) ...)
+     (define name
+       (case-lambda
+         (() (list (cons key-value (list (cons 'range (list dice-count dice-sides modifier)) ...)) ...))
+         ((key) (cond ((equal? key key-value)
+                       (list (cons 'range (list dice-count dice-sides modifier)) ...))
+                      ...
+                      (else (error 'name "unknown key" key))))
+         ((key roll)
+          (cond ((equal? key key-value)
+                 (cond ((range-test roll range)
+                        (formula-value (list dice-count dice-sides modifier)))
+                       ...
+                       (else (error 'name "roll out of range for" key-value roll))))
+                ...
+                (else (error 'name "unknown key" key)))))))))
+
+(define (formula-table-min table) (apply min (map (lambda (e) (formula-min (cdr e))) table)))
+(define (formula-table-max table) (apply max (map (lambda (e) (formula-max (cdr e))) table)))
+
+(define (formula-table-description table)
+  (string-intersperse
+   (map (lambda (e) (sprintf "~a: ~a" (range-text (car e)) (formula-text (cdr e)))) table)
+   ", "))
+
+(define (keyed-formula-table-min keyed-table)
+  (apply min (map (lambda (kv) (formula-table-min (cdr kv))) keyed-table)))
+(define (keyed-formula-table-max keyed-table)
+  (apply max (map (lambda (kv) (formula-table-max (cdr kv))) keyed-table)))
+
+(define (keyed-formula-table-description keyed-table)
+  (string-intersperse
+   (map (lambda (kv) (sprintf "~a: ~a" (car kv) (formula-table-description (cdr kv))))
+        keyed-table)
+   ".  "))
+
+;; (formula-field-li field-name label meta-dice-count meta-dice-sides table)
+;;
+;; As roll-field-li, for a define-formula-table table. Unlike a
+;; name-lookup table, "Choose" enters the final value directly (there is
+;; no roll surrogate to look up), so min/max come from the range of
+;; values the formulas can actually produce, not from the meta-roll's
+;; range.
+(define (formula-field-li field-name label meta-dice-count meta-dice-sides table)
+  (let* ((fname (symbol->string field-name))
+         (roll-id (string-append fname "-roll"))
+         (choose-id (string-append fname "-choose"))
+         (chosen-name (string-append "chosen-" fname))
+         (lo (formula-table-min table))
+         (hi (formula-table-max table)))
+    `(li (b ,label)
+         (br)
+         (input (@ (type "radio") (id ,roll-id) (name ,fname)
+                   (value "Roll") (checked)))
+         (label (@ (for ,roll-id))
+                ,(sprintf "Roll ~aD~a, then: ~a" meta-dice-count meta-dice-sides
+                          (formula-table-description table)))
+         (br)
+         (input (@ (type "radio") (id ,choose-id) (name ,fname)
+                   (value "Choose")))
+         (label (@ (for ,choose-id)) ,(sprintf "Choose ~a-~a" lo hi))
+         " "
+         (label (@ (for ,chosen-name)) ,(sprintf "Chosen ~a:" label))
+         (input (@ (type "number") (id ,chosen-name) (name ,chosen-name)
+                   (min ,lo) (max ,hi))))))
+
+;; (keyed-formula-field-li field-name label meta-dice-count meta-dice-sides key-label keyed-table)
+;;
+;; As formula-field-li, for a define-keyed-formula-table table.
+(define (keyed-formula-field-li field-name label meta-dice-count meta-dice-sides key-label keyed-table)
+  (let* ((fname (symbol->string field-name))
+         (roll-id (string-append fname "-roll"))
+         (choose-id (string-append fname "-choose"))
+         (chosen-name (string-append "chosen-" fname))
+         (lo (keyed-formula-table-min keyed-table))
+         (hi (keyed-formula-table-max keyed-table)))
+    `(li (b ,label)
+         (br)
+         (input (@ (type "radio") (id ,roll-id) (name ,fname)
+                   (value "Roll") (checked)))
+         (label (@ (for ,roll-id))
+                ,(sprintf "Roll ~aD~a (meaning depends on ~a), then: ~a"
+                          meta-dice-count meta-dice-sides key-label
+                          (keyed-formula-table-description keyed-table)))
+         (br)
+         (input (@ (type "radio") (id ,choose-id) (name ,fname)
+                   (value "Choose")))
+         (label (@ (for ,choose-id)) ,(sprintf "Choose ~a-~a" lo hi))
+         " "
+         (label (@ (for ,chosen-name)) ,(sprintf "Chosen ~a:" label))
+         (input (@ (type "number") (id ,chosen-name) (name ,chosen-name)
+                   (min ,lo) (max ,hi))))))
+
+;; -------------------------------------------------------------------
+;; Resolving a formula field's submitted value. Unlike resolve-field,
+;; "Choose" is NOT passed through `lookup': for a formula table there is
+;; no roll surrogate to look up, the user is choosing the final value.
+
+(define-syntax resolve-formula-field
+  (syntax-rules ()
+    ((_ field lookup dice-expr)
+     (if (string=? ($ (symbol->string 'field)) "Roll")
+         (lookup dice-expr)
+         (string->number ($ (string-append "chosen-" (symbol->string 'field))))))))
+
+(define-syntax resolve-keyed-formula-field
+  (syntax-rules ()
+    ((_ field lookup key dice-expr)
+     (if (string=? ($ (symbol->string 'field)) "Roll")
+         (lookup key dice-expr)
+         (string->number ($ (string-append "chosen-" (symbol->string 'field))))))))

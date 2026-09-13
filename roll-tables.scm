@@ -207,6 +207,38 @@
                      dice-expr
                      (string->number ($ (string-append "chosen-" (symbol->string 'field)))))))))
 
+;; (resolve-value field dice-expr)
+;;
+;; For a field with no table at all -- Roll evaluates dice-expr, Choose
+;; parses "chosen-<field>" directly, e.g. World Size (Cepheus Universal
+;; p. 326):
+;;
+;;   (define world-size (resolve-value world-size (+ (nD 2 6) 1)))
+(define-syntax resolve-value
+  (syntax-rules ()
+    ((_ field dice-expr)
+     (if (string=? ($ (symbol->string 'field)) "Roll")
+         dice-expr
+         (string->number ($ (string-append "chosen-" (symbol->string 'field))))))))
+
+;; (resolved-field! field resolve-expr)
+;;
+;; Wraps any of the resolve-* forms above (or resolve-value) with the
+;; `define' and `$session-set!' that always go with it, e.g.:
+;;
+;;   (resolved-field! starport (resolve-keyed-field starport starport-name major-or-minor (D 6)))
+;;
+;; in place of the repeated:
+;;
+;;   (define starport (resolve-keyed-field starport starport-name major-or-minor (D 6)))
+;;   ($session-set! 'starport starport)
+(define-syntax resolved-field!
+  (syntax-rules ()
+    ((_ field resolve-expr)
+     (begin
+       (define field resolve-expr)
+       ($session-set! 'field field)))))
+
 ;; -------------------------------------------------------------------
 ;; Formula tables: like roll tables, but a range selects a further dice
 ;; ROLL (e.g. "1D3+3") rather than a fixed value, such as the Government

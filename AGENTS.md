@@ -103,7 +103,12 @@ finished product — several files are stubs or mid-rewrite.
   Condition/DM table (p. 293) is internally inconsistent, and the
   book's own worked example applies no DM to Population at all, so
   `roll-population` follows the example and applies none either — noted
-  in a comment there.
+  in a comment there. `tech-level-name` (a digit-to-era/description
+  table for Tech Level, e.g. "Early Stellar -- ...") comes from the
+  general Technological Levels glossary (pp. 18-19), not the Creating
+  Worlds section itself, but is the obvious pairing for a Tech Level
+  result; it's shared with `cu-arcs.scm` for the same reason as the
+  other Homeworld lookups below.
 
 - `cu-worlds-local.sh` — Launcher for `cu-worlds.scm` bound to
   `127.0.0.1:8090`, for local interactive use (a different port from

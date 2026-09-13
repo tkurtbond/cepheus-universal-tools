@@ -161,7 +161,13 @@
   (test "tech-level-minimum Atmosphere 6" 0 (tech-level-minimum 6))
   (test-all-satisfy "roll-tech-level never negative"
     (lambda (v) (>= v 0))
-    (lambda () (roll-tech-level "E" 5 10 6 5 9))))
+    (lambda () (roll-tech-level "E" 5 10 6 5 9)))
+  (test "tech-level-name 0" "Primitive -- Stone Age." (tech-level-name 0))
+  (test "tech-level-name 8" "Pre-Stellar -- Modern Day. The internet, smartphones, and an integrated network society. Possible to reach other worlds in the same star system with rocket technology. Basic robots now available. Earth 2000 onwards." (tech-level-name 8))
+  (test "tech-level-name 10 (A)" "Early Stellar -- Development of gravity manipulation, as well as faster-than-light travel, nearby systems are opened up. Use of robots becomes widespread. The first primitive artificial intelligences become possible." (tech-level-name 10))
+  (test "tech-level-name 18 (J)" "Quantum -- Energy transfer is now perfected. Sentience can travel without physical form, and snap in and out of planes of existence. Indistinguishable from magic." (tech-level-name 18))
+  (test "tech-level-name 21 (beyond the book) still Quantum" "Quantum -- Energy transfer is now perfected. Sentience can travel without physical form, and snap in and out of planes of existence. Indistinguishable from magic." (tech-level-name 21))
+  (test-error "tech-level-name -1 out of range" (tech-level-name -1)))
 
 (test-group "Trade Codes (pp. 295-297)"
   (test "Agricultural" '("Agricultural") (trade-codes 6 7 5 7))

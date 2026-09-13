@@ -14,6 +14,7 @@
    roll-law-level law-level-name
    starport-tl-dm size-tl-dm atmosphere-tl-dm hydrographics-tl-dm
    population-tl-dm government-tl-dm tech-level-minimum roll-tech-level
+   tech-level-name
    trade-codes
    gas-giant-present? naval-base-present? scout-base-present? scout-base-dm bases-code
    uwp-line)
@@ -256,6 +257,32 @@
           (hydrographics-tl-dm hydrographics)
           (population-tl-dm population)
           (government-tl-dm government))))
+
+;; Tech Level eras, Cepheus Universal pp. 18-19 (the general Technological
+;; Levels glossary, not the Creating Worlds section itself, but the
+;; obvious source for a name/description to pair with a Tech Level
+;; digit). The book only names TL 0-18; anything higher falls into the
+;; open-ended Quantum catch-all.
+(define-roll-table (tech-level-name digit)
+  ((0) "Primitive -- Stone Age.")
+  ((1) "Primitive -- Roughly on a par with Bronze or Iron age technology. Earth 3300 BC-1400 AD.")
+  ((2) "Primitive -- Renaissance technology, scientific method and gunpowder. Earth 1400-1700.")
+  ((3) "Primitive -- Beginnings of mass production allows for product standardization, urbanisation and steam power. Earth 1700-1860.")
+  ((4) "Industrial -- Transition to steam-powered industrialisation is complete, bringing electric generators, telephones and other such inventions. Earth 1860-1900.")
+  ((5) "Industrial -- Widespread electrification, telephones and internal combustion for cars and aeroplanes. Medical advancement. Earth 1900-1939.")
+  ((6) "Industrial -- Development of nuclear power and more advanced computing, as well as rockets and jet engines. Earth 1940-1969.")
+  ((7) "Pre-Stellar -- Supersonic passenger planes, hovercraft, telecommunications satellites, reliable access to space, portable computers. Earth 1970-2000.")
+  ((8) "Pre-Stellar -- Modern Day. The internet, smartphones, and an integrated network society. Possible to reach other worlds in the same star system with rocket technology. Basic robots now available. Earth 2000 onwards.")
+  ((9) "Pre-Stellar -- Cybernetics in use. Slower-than-light drives mature and a star system can be fully explored and colonised. Fusion power plants are developed. Cyberpunk tropes fit this TL.")
+  ((10) "Early Stellar -- Development of gravity manipulation, as well as faster-than-light travel, nearby systems are opened up. Use of robots becomes widespread. The first primitive artificial intelligences become possible.")
+  ((11) "Early Stellar -- Sealed combat armour is in use. Grav vehicles begin to replace other types of transport. Holograms now in regular use.")
+  ((12) "Average Stellar -- Weather control revolutionizes terraforming and agriculture. Terraforming becomes possible.")
+  ((13) "Average Stellar -- Powered armour called 'battle dress' appears on the battlefield. Full artificial intelligence is perfected. Cloning and DNA modification is now common.")
+  ((14) "Average Stellar -- Portable plasma weapons feasible. Gravity attractor beams as well as repulsor shields are now in use.")
+  ((15) "High Stellar -- Floating cities are now possible, although rare and expensive.")
+  ((16) "Beyond Stellar -- Disintegrator weapons are in use, as is food and material replication technology. Matter transport becomes possible. Anti-matter powerplants now standard.")
+  ((17) "Beyond Stellar -- Transhumanist society, minds easily uploaded and downloaded, blurring the definition of android, human and sentience. Ringworlds now possible.")
+  ((18 . 999) "Quantum -- Energy transfer is now perfected. Sentience can travel without physical form, and snap in and out of planes of existence. Indistinguishable from magic."))
 
 ;; Trade Codes, Cepheus Universal pp. 295-297. Derived entirely from a
 ;; world's other characteristics -- no roll of its own. A world may

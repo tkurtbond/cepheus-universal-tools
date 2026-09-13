@@ -416,7 +416,7 @@
         (story-row "Starport" `(b ,starport) ": " (starport-description starport))
         (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government))
         (story-row "Law Level" `(b ,law-level) " (" (uwp-char law-level) "): " (law-level-name law-level))
-        (story-row "Tech Level" `(b ,tech-level))
+        (story-row "Tech Level" `(b ,tech-level) ": " (tech-level-name tech-level))
         (story-row "Trade Codes" `(b ,(if (null? codes) "None" (string-intersperse codes ", ")))))
 
       (h3 "Bases and Gas Giants (pp. 294, 297)")
@@ -511,7 +511,7 @@
         (story-row "Starport" `(b ,starport) ": " (starport-description starport))
         (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government))
         (story-row "Law Level" `(b ,law-level) " (" (uwp-char law-level) "): " (law-level-name law-level))
-        (story-row "Tech Level" `(b ,tech-level))
+        (story-row "Tech Level" `(b ,tech-level) ": " (tech-level-name tech-level))
         (story-row "Trade Codes" `(b ,(if (null? codes) "None" (string-intersperse codes ", "))))
         (story-row "Naval Base" `(b ,(if naval-base* "Yes" "No")))
         (story-row "Scout Base" `(b ,(if scout-base* "Yes" "No")))

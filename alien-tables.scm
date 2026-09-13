@@ -1,5 +1,5 @@
 ;;; alien-tables.scm -- Rules tables for Cepheus Universal Alien Race
-;;; Creation (pp. 326-329), factored out of cu-arcs-v2.scm so they can be
+;;; Creation (pp. 326-329), factored out of cu-arcs.scm so they can be
 ;;; unit-tested independently of the web front-end (see test-alien-tables.scm).
 
 (module alien-tables

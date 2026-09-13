@@ -1,7 +1,7 @@
-;;; cu-arcs-v2.scm -- Cepheus Universal Alien Race creation System, version 2.
+;;; cu-arcs.scm -- Cepheus Universal Alien Race creation System.
 ;;; Creates intelligent aliens.
 ;;;
-;;; awful --port=2020 cu-arcs-v2.scm
+;;; awful --port=2020 cu-arcs.scm
 (include "alien-tables.scm")
 
 (module cu-arcs ()

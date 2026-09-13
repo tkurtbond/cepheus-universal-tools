@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test-e2e.sh -- End-to-end smoke test for cu-arcs-v2.scm.
+# test-e2e.sh -- End-to-end smoke test for cu-arcs.scm.
 #
 # Starts a throwaway awful server, walks the full 9-page Alien Race
 # Creation wizard via curl, and checks:
@@ -48,7 +48,7 @@ assert_contains() {
 }
 
 # --- start the server ---
-awful --ip-address=127.0.0.1 --port=$PORT cu-arcs-v2.scm > "$LOG" 2>&1 &
+awful --ip-address=127.0.0.1 --port=$PORT cu-arcs.scm > "$LOG" 2>&1 &
 SERVER_PID=$!
 
 for i in $(seq 1 20); do

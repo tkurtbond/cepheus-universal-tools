@@ -8,33 +8,28 @@ finished product — several files are stubs or mid-rewrite.
 
 ## Files
 
-- `cu-arcs.scm` — "Cepheus Universal Alien Race Creation System," v1.
-  Single-page `awful` web app: one HTML form collects choices (Major/Minor
-  race, world size, atmosphere, hydrographics, population, government, law
-  level, tech level, starport — each either "roll" or manually chosen).
-  `/alien-creation-result` computes the rolls (2D6, 1D6, etc. via `D`/`nD`
-  helpers) following classic Traveller/Cepheus world-generation tables and
-  prints the results. Superseded by `cu-arcs-v2.scm`; kept as-is.
-
-- `cu-arcs-v2.scm` — The active app. A full implementation of the
-  rulebook's "Alien Race Creation" section (Cepheus Universal pp. 326-329),
-  as a 9-page `awful` wizard chained via `define-session-page` /
-  `$session-set!` / `$session`: Major or Minor Race → Homeworld (World
-  Size, Atmosphere, Hydrographics, Population, Government, Law Level, Tech
-  Level, Starport) → Biotype/Subtype → Reproduction (Sex, Reproduction
-  method) → Amphibious? → Body Form (Locomotion, Symmetry, Number of Legs)
-  → Size & Characteristics (Str/Dex/End/Int/Edu/Soc as dice formulas, e.g.
-  "2D6-1") → Armour & Natural Weapons → Senses (Vision, Audio, Olfactory,
-  Special Sense) → Life Cycle (Lifespan, Physiological Advantage), ending
-  on the book's Interpretation prompt. Breathing and Interpretation have
-  no rollable table in the book and are narrative-only, with no form step.
+- `cu-arcs.scm` — "Cepheus Universal Alien Race Creation System." The
+  active app. A full implementation of the rulebook's "Alien Race
+  Creation" section (Cepheus Universal pp. 326-329), as a 9-page `awful`
+  wizard chained via `define-session-page` / `$session-set!` /
+  `$session`: Major or Minor Race → Homeworld (World Size, Atmosphere,
+  Hydrographics, Population, Government, Law Level, Tech Level, Starport)
+  → Biotype/Subtype → Reproduction (Sex, Reproduction method) →
+  Amphibious? → Body Form (Locomotion, Symmetry, Number of Legs) → Size &
+  Characteristics (Str/Dex/End/Int/Edu/Soc as dice formulas, e.g. "2D6-1")
+  → Armour & Natural Weapons → Senses (Vision, Audio, Olfactory, Special
+  Sense) → Life Cycle (Lifespan, Physiological Advantage), ending on the
+  book's Interpretation prompt. Breathing and Interpretation have no
+  rollable table in the book and are narrative-only, with no form step.
   Run with `./cu-arcs-local.sh` (below), or directly via
-  `awful --port=2020 cu-arcs-v2.scm` (per the file's header comment).
+  `awful --port=2020 cu-arcs.scm` (per the file's header comment). This
+  supersedes an earlier single-page v1 prototype, whose contents have
+  since been replaced in place by this wizard.
 
 - `alien-tables.scm` — All the rules tables and resolvers behind the
   wizard, factored out into their own Chicken module (`alien-tables`) so
   they can be unit-tested independently of the web front-end. `D`/`nD`
-  (dice primitives) live here too. `cu-arcs-v2.scm` pulls this in via
+  (dice primitives) live here too. `cu-arcs.scm` pulls this in via
   `(include "alien-tables.scm")` + `(import alien-tables)` — see "Local
   modules" below for why the `include` is necessary.
 
@@ -65,12 +60,11 @@ finished product — several files are stubs or mid-rewrite.
   result) and use small bespoke resolver functions instead, noted in
   comments there.
 
-- `cu-arcs-consp.sh` — Launcher script for `cu-arcs.scm`
-  (`awful --ip-address=71.19.158.45 --port=8080 cu-arcs.scm`). Has a
-  broken shebang (`#1` instead of `#!`), so it likely doesn't run as-is —
-  treat as an experimental/personal script.
+- `cu-arcs-consp.sh` — Launcher script for `cu-arcs.scm`, bound to a
+  specific external address
+  (`awful --ip-address=71.19.158.45 --port=8080 cu-arcs.scm`).
 
-- `cu-arcs-local.sh` — Launcher for `cu-arcs-v2.scm` bound to
+- `cu-arcs-local.sh` — Launcher for `cu-arcs.scm` bound to
   `127.0.0.1:8080`, for local interactive use.
 
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
@@ -114,7 +108,8 @@ finished product — several files are stubs or mid-rewrite.
   with `./test-e2e.sh`; it starts and tears down its own server, so it
   won't collide with `cu-arcs-local.sh` on port 8080.
 
-There is no test coverage for `cu-arcs.scm` (v1, superseded), `tables.scm`,
+There is no test coverage for `cu-arcs.scm` itself (the `awful`/HTML web
+layer — `test-e2e.sh` exercises it indirectly over HTTP), `tables.scm`,
 `sa-acs.scm`, or `dice.scm`.
 
 ## Local modules

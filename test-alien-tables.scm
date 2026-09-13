@@ -1,5 +1,5 @@
 ;;; test-alien-tables.scm -- Unit tests for alien-tables.scm, the rules
-;;; tables behind cu-arcs-v2.scm's Alien Race Creation wizard (Cepheus
+;;; tables behind cu-arcs.scm's Alien Race Creation wizard (Cepheus
 ;;; Universal pp. 326-329).
 ;;;
 ;;; Run with: csi -s test-alien-tables.scm

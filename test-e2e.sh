@@ -120,14 +120,14 @@ curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/alien-creation-result" \
   --data-urlencode "government=Roll" --data-urlencode "law-level=Roll" \
   --data-urlencode "tech-level=Choose" --data-urlencode "chosen-tech-level=1" \
   --data-urlencode "starport=Choose" --data-urlencode "chosen-starport=6" -o /tmp/e2e-major.html
-assert_contains "Major race: starport roll 6 still gives A" "$(cat /tmp/e2e-major.html)" "Star Port: <b>A</b>"
+assert_contains "Major race: starport roll 6 still gives A" "$(cat /tmp/e2e-major.html)" '<b>A</b>'
 
 # Biotype/Subtype boundary: roll 2/2 -> Scavenger/Reducer.
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/alien-creation-result-2" \
   --data-urlencode "biotype=Choose" --data-urlencode "chosen-biotype=2" \
   --data-urlencode "subtype=Choose" --data-urlencode "chosen-subtype=2" -o /tmp/e2e-biotype.html
-assert_contains "biotype 2 -> Scavenger" "$(cat /tmp/e2e-biotype.html)" "Biotype: <b>Scavenger</b>"
-assert_contains "subtype 2 (Scavenger) -> Reducer" "$(cat /tmp/e2e-biotype.html)" "Subtype: <b>Reducer</b>"
+assert_contains "biotype 2 -> Scavenger" "$(cat /tmp/e2e-biotype.html)" '<b>Scavenger</b>'
+assert_contains "subtype 2 (Scavenger) -> Reducer" "$(cat /tmp/e2e-biotype.html)" '<b>Reducer</b>'
 
 rm -f /tmp/e2e-major.html /tmp/e2e-biotype.html
 

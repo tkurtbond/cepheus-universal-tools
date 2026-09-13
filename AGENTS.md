@@ -24,7 +24,14 @@ finished product — several files are stubs or mid-rewrite.
   Run with `./cu-arcs-local.sh` (below), or directly via
   `awful --port=2020 cu-arcs.scm` (per the file's header comment). This
   supersedes an earlier single-page v1 prototype, whose contents have
-  since been replaced in place by this wizard.
+  since been replaced in place by this wizard. Each "story so far"
+  summary renders as a two-column SXML table (`story-row`/`story-table`,
+  defined in this file), labels right-aligned and results left-aligned;
+  the Homeworld characteristics also show each digit/letter's name or
+  description, reusing `worlds-tables.scm`'s lookup tables (imported
+  with a `wt-` prefix to avoid clashing with `alien-tables`' own
+  `D`/`nD`/`size-name`) since the Homeworld step and `cu-worlds.scm`'s
+  full Creating Worlds system share the same underlying rulebook tables.
 
 - `alien-tables.scm` — All the rules tables and resolvers behind the
   wizard, factored out into their own Chicken module (`alien-tables`) so

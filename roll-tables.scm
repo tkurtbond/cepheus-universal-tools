@@ -18,6 +18,21 @@
 (import (chicken format))
 (import (chicken string))
 
+;; -------------------------------------------------------------------
+;; General Universal Profile helpers (used for world UWPs as well as
+;; character/starport codes), not tied to any one table.
+
+(define (clamp n lo hi) (max lo (min hi n)))
+
+;; A Universal Profile digit: 0-9 as themselves, then letters for 10 and
+;; up, skipping I and O (too easily confused with 1 and 0) -- the usual
+;; Traveller/Cepheus convention.
+(define uwp-letters "ABCDEFGHJKLMNPQRSTUVWXYZ")
+(define (uwp-char n)
+  (if (< n 10)
+      (number->string n)
+      (string (string-ref uwp-letters (- n 10)))))
+
 ;; A range is either (n) -- a single roll value -- or (lo . hi), inclusive
 ;; on both ends. This mirrors how ranges are written in the rulebook (and
 ;; in tables.scm): e.g. (8) for a lone "8", (3 . 5) for "3-5".

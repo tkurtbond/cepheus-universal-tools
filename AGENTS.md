@@ -52,11 +52,15 @@ finished product — several files are stubs or mid-rewrite.
     `resolved-field!` — collapse a page's "read Roll-vs-Choose, roll or
     parse, look up, `$session-set!`" logic for one field down to a
     single line.
+  Also provides two small generic helpers used by both `alien-tables.scm`
+  and `worlds-tables.scm`: `clamp` and `uwp-char` (the latter renders a
+  Universal Profile digit as its usual single character — 0-9 as
+  themselves, then letters for 10+).
   Not a module itself (see "Local modules" below); `(include
   "roll-tables.scm")` it into whichever module needs it. A few tables in
-  `alien-tables.scm` don't fit this DSL (Sex's "1D3+1 sexes", Armour,
-  Natural Weapons, Special Sense, Lifespan, Physiological Advantage all
-  need a modified-roll-vs-threshold check, or a roll embedded in a fixed
+  `alien-tables.scm` and `worlds-tables.scm` don't fit this DSL (e.g.
+  Sex's "1D3+1 sexes", Armour, Natural Weapons and other
+  modified-roll-vs-threshold checks, or a roll embedded in a fixed
   result) and use small bespoke resolver functions instead, noted in
   comments there.
 
@@ -66,6 +70,37 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-arcs-local.sh` — Launcher for `cu-arcs.scm` bound to
   `127.0.0.1:8080`, for local interactive use.
+
+- `cu-worlds.scm` — "Cepheus Universal Creating Worlds" app. A full
+  implementation of the rulebook's "Creating Worlds" section (Cepheus
+  Universal pp. 281-302), as a 9-page `awful` wizard producing a single
+  mainworld's Universal World Profile (UWP): World Size → Atmosphere →
+  Hydrographics → Population → Starport → Government → Law Level → Tech
+  Level (with Trade Codes derived and shown alongside it, since they
+  have no roll of their own) → Bases (Naval/Scout) and Gas Giants,
+  ending on the UWP line itself plus the book's Travel
+  Zone/Climate/hook and Interpretation prompts (all GM judgment calls
+  with no dice mechanic, so narrative-only, as with `cu-arcs.scm`'s
+  Breathing/Interpretation). For every characteristic that maps a digit
+  to a name or short description, the wizard shows both — e.g. "World
+  Size: 5 (8,000 km, surface gravity 0.45g)". Verified end to end
+  against the rulebook's own worked example, Lorcan (pp. 301-302): see
+  "Lorcan worked example" in `test-worlds-tables.scm` and the second
+  half of `test-worlds-e2e.sh`. Run with `./cu-worlds-local.sh` (below),
+  or directly via `awful --port=2021 cu-worlds.scm`.
+
+- `worlds-tables.scm` — All the rules tables and resolvers behind
+  `cu-worlds.scm`, factored out into their own Chicken module
+  (`worlds-tables`), mirroring `alien-tables.scm`'s split from
+  `cu-arcs.scm`. `D`/`nD` live here too. The rulebook's Population
+  Condition/DM table (p. 293) is internally inconsistent, and the
+  book's own worked example applies no DM to Population at all, so
+  `roll-population` follows the example and applies none either — noted
+  in a comment there.
+
+- `cu-worlds-local.sh` — Launcher for `cu-worlds.scm` bound to
+  `127.0.0.1:8090`, for local interactive use (a different port from
+  `cu-arcs-local.sh`'s 8080, so both can run at once).
 
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
   marked "Just a reminder, for now." Stub module that only imports
@@ -108,9 +143,25 @@ finished product — several files are stubs or mid-rewrite.
   with `./test-e2e.sh`; it starts and tears down its own server, so it
   won't collide with `cu-arcs-local.sh` on port 8080.
 
-There is no test coverage for `cu-arcs.scm` itself (the `awful`/HTML web
-layer — `test-e2e.sh` exercises it indirectly over HTTP), `tables.scm`,
-`sa-acs.scm`, or `dice.scm`.
+- `test-worlds-tables.scm` — Unit tests for `worlds-tables.scm`, mirroring
+  `test-alien-tables.scm`'s approach: exact expected values for the
+  deterministic name/descriptor tables, repeated trials for the
+  dice-rolling resolvers, plus a dedicated "Lorcan worked example" group
+  that replays the rulebook's own example (pp. 301-302) using its stated
+  intermediate rolls and checks every derived value against the text.
+  Run with `csi -s test-worlds-tables.scm`.
+
+- `test-worlds-e2e.sh` — End-to-end smoke test for `cu-worlds.scm`, on
+  port 18082 (so it doesn't collide with `test-e2e.sh` or
+  `cu-worlds-local.sh`): the "Roll everything" path plus the Lorcan
+  example again, this time walked over HTTP via the "Choose" path,
+  checking the final page's UWP line matches the book's exactly
+  ("Lorcan E5A6595-8 Fluid Oceans, Non-Industrial G"). Run with
+  `./test-worlds-e2e.sh`.
+
+There is no test coverage for `cu-arcs.scm` or `cu-worlds.scm` themselves
+(the `awful`/HTML web layer — the `test-*-e2e.sh` scripts exercise them
+indirectly over HTTP), `tables.scm`, `sa-acs.scm`, or `dice.scm`.
 
 ## Local modules
 

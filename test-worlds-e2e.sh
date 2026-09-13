@@ -110,19 +110,19 @@ curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/starport-result" \
   --data-urlencode "population=Choose" --data-urlencode "chosen-population=5" -o /dev/null
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/government-result" \
   --data-urlencode "starport=Choose" --data-urlencode "chosen-starport=5" -o /tmp/worlds-e2e-starport.html
-assert_contains "Lorcan Starport is E" "$(cat /tmp/worlds-e2e-starport.html)" "Starport: <b>E</b>"
+assert_contains "Lorcan Starport is E" "$(cat /tmp/worlds-e2e-starport.html)" '<b>E</b>: Frontier'
 
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/law-level-result" \
   --data-urlencode "government=Choose" --data-urlencode "chosen-government=11" -o /tmp/worlds-e2e-government.html
-assert_contains "Lorcan Government is 9 (Impersonal Bureaucracy)" "$(cat /tmp/worlds-e2e-government.html)" "Government: <b>9</b> (9): Impersonal Bureaucracy"
+assert_contains "Lorcan Government is 9 (Impersonal Bureaucracy)" "$(cat /tmp/worlds-e2e-government.html)" '<b>9</b> (9): Impersonal Bureaucracy'
 
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/tech-level-result" \
   --data-urlencode "law-level=Choose" --data-urlencode "chosen-law-level=3" -o /tmp/worlds-e2e-lawlevel.html
-assert_contains "Lorcan Law Level is 5 (Medium Law)" "$(cat /tmp/worlds-e2e-lawlevel.html)" "Law Level: <b>5</b>"
+assert_contains "Lorcan Law Level is 5 (Medium Law)" "$(cat /tmp/worlds-e2e-lawlevel.html)" '<b>5</b> (5): Medium Law'
 
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/bases-result" \
   --data-urlencode "tech-level=Choose" --data-urlencode "chosen-tech-level=6" -o /tmp/worlds-e2e-techlevel.html
-assert_contains "Lorcan Tech Level is 8" "$(cat /tmp/worlds-e2e-techlevel.html)" "Tech Level: <b>8</b>"
+assert_contains "Lorcan Tech Level is 8" "$(cat /tmp/worlds-e2e-techlevel.html)" '<b>8</b>'
 assert_contains "Lorcan Trade Codes are Fluid Oceans, Non-Industrial" "$(cat /tmp/worlds-e2e-techlevel.html)" "Fluid Oceans, Non-Industrial"
 
 curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/world-result" \

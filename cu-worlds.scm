@@ -18,6 +18,17 @@
 
 (include "roll-tables.scm")
 
+;; A two-column "story so far" summary table: labels right-aligned in
+;; the left column, results left-aligned in the right column, so the
+;; running list of resolved characteristics stays tidy as it grows
+;; longer with each page.
+(define (story-row label . content)
+  `(tr (td (@ (style "text-align:right; padding-right:0.5em")) ,(string-append label ":"))
+       (td (@ (style "text-align:left")) ,@content)))
+
+(define (story-table . rows)
+  `(table (@ (style "border-collapse:collapse")) ,@rows))
+
 (define-session-page (main-page-path)
   (lambda ()
     `((h3 "Creating Worlds")
@@ -41,8 +52,9 @@
     (resolved-field! world-name (let ((v ($ "world-name"))) (if (string=? v "") "Unnamed World" v)))
     (resolved-field! hex ($ "hex"))
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex)))
 
       (h3 "World Size (p. 281)")
       (form (@ (action "/atmosphere-result"))
@@ -76,9 +88,10 @@
     (resolved-field! world-size (resolve-value world-size (roll-world-size)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size)))
 
       (h3 "Atmosphere (p. 285)")
       (form (@ (action "/hydrographics-result"))
@@ -113,10 +126,11 @@
     (resolved-field! atmosphere (resolve-value atmosphere (roll-atmosphere world-size)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere)))
 
       (h3 "Hydrographics (p. 290)")
       (form (@ (action "/population-result"))
@@ -152,11 +166,12 @@
     (resolved-field! hydrographics (resolve-value hydrographics (roll-hydrographics world-size atmosphere)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics)))
 
       (h3 "Population (p. 293)")
       (form (@ (action "/starport-result"))
@@ -192,12 +207,13 @@
     (resolved-field! population (resolve-value population (roll-population)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population)))
 
       (h3 "Starport (p. 293)")
       (form (@ (action "/government-result"))
@@ -236,13 +252,14 @@
       (resolve-field starport (lambda (roll) (starport-class-name (+ roll -7 population))) (nD 2 6)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
-      "Starport: " (b ,starport) ": " ,(starport-description starport) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population))
+        (story-row "Starport" `(b ,starport) ": " (starport-description starport)))
 
       (h3 "Government (p. 294)")
       (form (@ (action "/law-level-result"))
@@ -282,14 +299,15 @@
       (resolve-field government (lambda (roll) (clamp (+ roll -7 population) 0 15)) (nD 2 6)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
-      "Starport: " (b ,starport) ": " ,(starport-description starport) (br)
-      "Government: " (b ,government) " (" ,(uwp-char government) "): " ,(government-name government) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population))
+        (story-row "Starport" `(b ,starport) ": " (starport-description starport))
+        (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government)))
 
       (h3 "Law Level (p. 294)")
       (form (@ (action "/tech-level-result"))
@@ -330,15 +348,16 @@
       (resolve-field law-level (lambda (roll) (clamp (+ roll -7 government) 0 999)) (nD 2 6)))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
-      "Starport: " (b ,starport) ": " ,(starport-description starport) (br)
-      "Government: " (b ,government) " (" ,(uwp-char government) "): " ,(government-name government) (br)
-      "Law Level: " (b ,law-level) " (" ,(uwp-char law-level) "): " ,(law-level-name law-level) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population))
+        (story-row "Starport" `(b ,starport) ": " (starport-description starport))
+        (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government))
+        (story-row "Law Level" `(b ,law-level) " (" (uwp-char law-level) "): " (law-level-name law-level)))
 
       (h3 "Technology Level (p. 295)")
       (p "Minimum Tech Level for this Atmosphere: " ,(tech-level-minimum atmosphere))
@@ -384,22 +403,21 @@
                (+ roll (starport-tl-dm starport) (size-tl-dm world-size) (atmosphere-tl-dm atmosphere)
                   (hydrographics-tl-dm hydrographics) (population-tl-dm population) (government-tl-dm government))))
         (D 6)))
+    (define codes (trade-codes world-size atmosphere hydrographics population))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
-      "Starport: " (b ,starport) ": " ,(starport-description starport) (br)
-      "Government: " (b ,government) " (" ,(uwp-char government) "): " ,(government-name government) (br)
-      "Law Level: " (b ,law-level) " (" ,(uwp-char law-level) "): " ,(law-level-name law-level) (br)
-      "Tech Level: " (b ,tech-level) (br)
-      "Trade Codes: " (b ,(if (null? (trade-codes world-size atmosphere hydrographics population))
-                               "None"
-                               (string-intersperse (trade-codes world-size atmosphere hydrographics population) ", ")))
-      (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population))
+        (story-row "Starport" `(b ,starport) ": " (starport-description starport))
+        (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government))
+        (story-row "Law Level" `(b ,law-level) " (" (uwp-char law-level) "): " (law-level-name law-level))
+        (story-row "Tech Level" `(b ,tech-level))
+        (story-row "Trade Codes" `(b ,(if (null? codes) "None" (string-intersperse codes ", ")))))
 
       (h3 "Bases and Gas Giants (pp. 294, 297)")
       (form (@ (action "/world-result"))
@@ -483,20 +501,21 @@
     (define bases (bases-code naval-base* scout-base*))
 
     `((h3 "The story so far")
-      "World Name: " (b ,world-name) (br)
-      "Hex: " (b ,hex) (br)
-      "World Size: " (b ,world-size) " (" ,(uwp-char world-size) "): " ,(size-name world-size) (br)
-      "Atmosphere: " (b ,atmosphere) " (" ,(uwp-char atmosphere) "): " ,(atmosphere-name atmosphere) (br)
-      "Hydrographics: " (b ,hydrographics) " (" ,(uwp-char hydrographics) "): " ,(hydrographics-name hydrographics) (br)
-      "Population: " (b ,population) " (" ,(uwp-char population) "): " ,(population-name population) (br)
-      "Starport: " (b ,starport) ": " ,(starport-description starport) (br)
-      "Government: " (b ,government) " (" ,(uwp-char government) "): " ,(government-name government) (br)
-      "Law Level: " (b ,law-level) " (" ,(uwp-char law-level) "): " ,(law-level-name law-level) (br)
-      "Tech Level: " (b ,tech-level) (br)
-      "Trade Codes: " (b ,(if (null? codes) "None" (string-intersperse codes ", "))) (br)
-      "Naval Base: " (b ,(if naval-base* "Yes" "No")) (br)
-      "Scout Base: " (b ,(if scout-base* "Yes" "No")) (br)
-      "Gas Giant Present: " (b ,(if gas-giant "Yes" "No")) (br)
+      ,(story-table
+        (story-row "World Name" `(b ,world-name))
+        (story-row "Hex" `(b ,hex))
+        (story-row "World Size" `(b ,world-size) " (" (uwp-char world-size) "): " (size-name world-size))
+        (story-row "Atmosphere" `(b ,atmosphere) " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (story-row "Hydrographics" `(b ,hydrographics) " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (story-row "Population" `(b ,population) " (" (uwp-char population) "): " (population-name population))
+        (story-row "Starport" `(b ,starport) ": " (starport-description starport))
+        (story-row "Government" `(b ,government) " (" (uwp-char government) "): " (government-name government))
+        (story-row "Law Level" `(b ,law-level) " (" (uwp-char law-level) "): " (law-level-name law-level))
+        (story-row "Tech Level" `(b ,tech-level))
+        (story-row "Trade Codes" `(b ,(if (null? codes) "None" (string-intersperse codes ", "))))
+        (story-row "Naval Base" `(b ,(if naval-base* "Yes" "No")))
+        (story-row "Scout Base" `(b ,(if scout-base* "Yes" "No")))
+        (story-row "Gas Giant Present" `(b ,(if gas-giant "Yes" "No"))))
 
       (h3 "Universal World Profile")
       (p (tt ,(string-intersperse

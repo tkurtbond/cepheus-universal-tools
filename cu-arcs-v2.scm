@@ -284,7 +284,7 @@ Mid Tech 7-9")
 
 (define-session-page "/alien-creation-result"
   (lambda ()
-    (define major-or-minor ($session 'major-or-minor'))
+    (define major-or-minor ($session 'major-or-minor))
     (define world-size (if (string=? ($ "world-size") "Roll")
                            (+ (nD 2 6) 1)
                            (string->number ($ "chosen-world-size"))))
@@ -347,7 +347,7 @@ Mid Tech 7-9")
                                      ((= roll 6)
                                       "B"))))
                          (string-upcase ($ "chosen-starport"))))
-    ($session-set! starport 'starport)
+    ($session-set! 'starport starport)
                              
     `((h3 "The story so far")
       "Major or Minor Race: " (b ,major-or-minor) (br)

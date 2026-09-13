@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-worlds-e2e.sh -- End-to-end smoke test for cu-worlds.scm.
 #
-# Starts a throwaway awful server, walks the full 9-page Creating Worlds
+# Starts a throwaway awful server, walks the full 10-page Creating Worlds
 # wizard via curl, and checks:
 #   1. The "Roll everything" path reaches the final page and every
 #      expected field label appears somewhere along the way (catches
@@ -63,7 +63,7 @@ if ! curl -s -o /dev/null "$BASE/"; then
 fi
 
 roll_all() {
-  # Walk all 9 pages, choosing "Roll" for every field, ending on the
+  # Walk all 10 pages, choosing "Roll" for every field, ending on the
   # final page's HTML.
   curl -s -c "$COOKIES" -b "$COOKIES" -G "$BASE/world-size-result" \
     --data-urlencode "world-name=Roll Test" --data-urlencode "hex=0101" -o /dev/null

@@ -10,7 +10,7 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-arcs.scm` — "Cepheus Universal Alien Race Creation System." The
   active app. A full implementation of the rulebook's "Alien Race
-  Creation" section (Cepheus Universal pp. 326-329), as a 9-page `awful`
+  Creation" section (Cepheus Universal pp. 326-329), as an 11-page `awful`
   wizard chained via `define-session-page` / `$session-set!` /
   `$session`: Major or Minor Race → Homeworld (World Size, Atmosphere,
   Hydrographics, Population, Government, Law Level, Tech Level, Starport)
@@ -26,8 +26,9 @@ finished product — several files are stubs or mid-rewrite.
   supersedes an earlier single-page v1 prototype, whose contents have
   since been replaced in place by this wizard. Each "story so far"
   summary renders as a two-column SXML table (`story-row`/`story-table`,
-  defined in this file), labels right-aligned and results left-aligned;
-  the Homeworld characteristics also show each digit/letter's name or
+  defined in this file, mirroring the identical helpers in
+  `cu-worlds.scm`), labels right-aligned and results left-aligned; the
+  Homeworld characteristics also show each digit/letter's name or
   description, reusing `worlds-tables.scm`'s lookup tables (imported
   with a `wt-` prefix to avoid clashing with `alien-tables`' own
   `D`/`nD`/`size-name`) since the Homeworld step and `cu-worlds.scm`'s
@@ -80,7 +81,7 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-worlds.scm` — "Cepheus Universal Creating Worlds" app. A full
   implementation of the rulebook's "Creating Worlds" section (Cepheus
-  Universal pp. 281-302), as a 9-page `awful` wizard producing a single
+  Universal pp. 281-302), as an 11-page `awful` wizard producing a single
   mainworld's Universal World Profile (UWP): World Size → Atmosphere →
   Hydrographics → Population → Starport → Government → Law Level → Tech
   Level (with Trade Codes derived and shown alongside it, since they
@@ -88,9 +89,12 @@ finished product — several files are stubs or mid-rewrite.
   ending on the UWP line itself plus the book's Travel
   Zone/Climate/hook and Interpretation prompts (all GM judgment calls
   with no dice mechanic, so narrative-only, as with `cu-arcs.scm`'s
-  Breathing/Interpretation). For every characteristic that maps a digit
-  to a name or short description, the wizard shows both — e.g. "World
-  Size: 5 (8,000 km, surface gravity 0.45g)". Verified end to end
+  Breathing/Interpretation). Each "story so far" summary renders as a
+  two-column SXML table (`story-row`/`story-table`, defined in this
+  file), labels right-aligned and results left-aligned; for every
+  characteristic that maps a digit to a name or short description, the
+  wizard shows both — e.g. "World Size: 5 (8,000 km, surface gravity
+  0.45g)". Verified end to end
   against the rulebook's own worked example, Lorcan (pp. 301-302): see
   "Lorcan worked example" in `test-worlds-tables.scm` and the second
   half of `test-worlds-e2e.sh`. Run with `./cu-worlds-local.sh` (below),
@@ -147,7 +151,7 @@ finished product — several files are stubs or mid-rewrite.
   with repeated trials against the valid range/set instead.
 
 - `test-e2e.sh` — End-to-end smoke test. Starts a throwaway `awful`
-  instance on port 18080, walks the full 9-page wizard over HTTP with
+  instance on port 18080, walks the full 10-page wizard over HTTP with
   `curl`, and checks that every expected field label appears on the final
   page (catches routing/session/template mistakes, not table
   correctness), plus a few deterministic boundary cases via the "Choose"

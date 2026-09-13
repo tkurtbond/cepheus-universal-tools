@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-e2e.sh -- End-to-end smoke test for cu-arcs.scm.
 #
-# Starts a throwaway awful server, walks the full 9-page Alien Race
+# Starts a throwaway awful server, walks the full 10-page Alien Race
 # Creation wizard via curl, and checks:
 #   1. The "Roll everything" path reaches the final page and every
 #      expected field label appears somewhere along the way (catches
@@ -64,7 +64,7 @@ if ! curl -s -o /dev/null "$BASE/"; then
 fi
 
 roll_all() {
-  # Walk all 9 pages, choosing "Roll" for every field, ending on the
+  # Walk all 10 pages, choosing "Roll" for every field, ending on the
   # final page's HTML.
   curl -s -c "$COOKIES" -b "$COOKIES" "$BASE/major-minor-result?major-or-minor=$1" -o /dev/null
   curl -s -G -c "$COOKIES" -b "$COOKIES" "$BASE/alien-creation-result" \

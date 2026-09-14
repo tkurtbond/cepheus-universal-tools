@@ -79,6 +79,9 @@ finished product — several files are stubs or mid-rewrite.
 - `cu-arcs-local.sh` — Launcher for `cu-arcs.scm` bound to
   `127.0.0.1:8080`, for local interactive use.
 
+- `cu-arcs-main.scm` — `awful-main` entry point for `cu-arcs.scm`; see
+  "Static executables (awful-main)" below.
+
 - `cu-worlds.scm` — "Cepheus Universal Creating Worlds" app. A full
   implementation of the rulebook's "Creating Worlds" section (Cepheus
   Universal pp. 281-302), as an 11-page `awful` wizard producing a single
@@ -118,6 +121,9 @@ finished product — several files are stubs or mid-rewrite.
   `127.0.0.1:8090`, for local interactive use (a different port from
   `cu-arcs-local.sh`'s 8080, so both can run at once).
 
+- `cu-worlds-main.scm` — `awful-main` entry point for `cu-worlds.scm`; see
+  "Static executables (awful-main)" below.
+
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
   marked "Just a reminder, for now." Stub module that only imports
   libraries (including `awful`) but defines nothing yet — a placeholder
@@ -138,6 +144,10 @@ finished product — several files are stubs or mid-rewrite.
   sizes, take the lowest of a negative pool). The OVA mechanic supports a
   different system (OVA, a diceless/dice-pool anime RPG) rather than
   Cepheus itself.
+
+- `GNUmakefile` — Builds standalone static executables for `cu-arcs.scm`
+  and `cu-worlds.scm` via the `awful-main` egg; see "Static executables
+  (awful-main)" below.
 
 ## Testing
 
@@ -181,11 +191,44 @@ indirectly over HTTP), `tables.scm`, `sa-acs.scm`, or `dice.scm`.
 
 ## Local modules
 
-This project has no build system or egg packaging — `awful` just loads a
-single `.scm` file directly, so cross-file code reuse works via Chicken's
-`include`, not by installing local eggs. The pattern used throughout:
-define a `(module foo (...) ...)` in its own file, then `(include
-"foo.scm")` it as a *sibling* top-level form (not nested inside another
-module) before the form that does `(import foo)`. `roll-tables.scm`
+This project has no egg packaging — for interactive dev use, `awful`
+just loads a single `.scm` file directly, so cross-file code reuse works
+via Chicken's `include`, not by installing local eggs. The pattern used
+throughout: define a `(module foo (...) ...)` in its own file, then
+`(include "foo.scm")` it as a *sibling* top-level form (not nested inside
+another module) before the form that does `(import foo)`. `roll-tables.scm`
 deliberately isn't wrapped in a module — it's just `(include
 "roll-tables.scm")`d directly into whichever module needs its macros.
+
+## Static executables (awful-main)
+
+`cu-arcs.scm` and `cu-worlds.scm` can also be built into standalone
+binaries (no Chicken install needed to run them) using the `awful-main`
+egg (`chicken-install awful-main`; also requires `spiffy`, already an
+`awful` dependency):
+
+- `cu-arcs-main.scm` / `cu-worlds-main.scm` are the `awful-main` entry
+  points: each `(include ...)` its app's `.scm` file, then instantiates
+  the `(awful main)` functor over that app's module (e.g. `(module main
+  = ((awful main) cu-arcs))`). `awful-main` generates the CLI parsing
+  (`--addr`, `--port`, `--access-log`, `--web-root`, `--dev`, etc.) and
+  startup wiring around the app.
+- The functor requires the app's module to export a `run` procedure,
+  which it calls *from inside* `awful-start`'s startup thunk — pages
+  registered any earlier (e.g. purely as top-level side effects of
+  importing the module) don't take effect. So both `cu-arcs.scm` and
+  `cu-worlds.scm` wrap all their `define-session-page` forms in
+  `(define (run . args) ...)`, exported from the module, and then call
+  `(run)` once more at the very bottom of the module body (outside
+  `run`'s definition). That bottom-level call is what registers pages
+  for the plain interpreted `awful cu-arcs.scm` dev workflow, which
+  never calls `run` itself; the compiled binary calls `run` a second
+  time via `awful-start`, which is harmless (just re-registers the same
+  handlers).
+- Build both with `make` (see `GNUmakefile`); executables land in
+  `build/` (gitignored) as `build/cu-arcs-server` and
+  `build/cu-worlds-server`, alongside an empty `build/static/`
+  (the default `--web-root`). `make run-arcs` / `make run-worlds` build
+  (if needed) and run one directly; `make clean` removes `build/`.
+  To build by hand: `csc -static -o build/cu-arcs-server
+  cu-arcs-main.scm` (same pattern for `cu-worlds`).

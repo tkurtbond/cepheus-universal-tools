@@ -552,7 +552,7 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
       (form (@ (action "/world-markdown"))
             (input (@ (type "submit") (value "Show as Markdown"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over"))))))))
+            (input (@ (type "submit") (value "Start Over")))))))
 
 ;; Renders the same results as /world-result, as a block of Markdown
 ;; text the GM can copy into their own notes. Reads everything back
@@ -614,7 +614,7 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
              "Write up a summary of the world: what do these results say about its environment, economy and "
              "society, and what makes it worth visiting (or avoiding)?\n"))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Start Over"))))))))
 
 (run)
 

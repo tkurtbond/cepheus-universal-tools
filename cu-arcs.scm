@@ -875,7 +875,7 @@ if Major race choose 8-10")
       (form (@ (action "/alien-creation-markdown"))
             (input (@ (type "submit") (value "Show as Markdown"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over"))))))))
+            (input (@ (type "submit") (value "Start Over")))))))
 
 ;; Renders the same results as /alien-creation-result-9, as a block of
 ;; Markdown text the GM can copy into their own notes. Reads
@@ -956,7 +956,7 @@ if Major race choose 8-10")
              "Write up a summary of the alien species: what do these results say about how the race lives "
              "today, and how has their evolution or physiology shaped their society and outlook?\n"))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Start Over"))))))))
 
 (run)
 

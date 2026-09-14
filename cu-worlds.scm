@@ -35,19 +35,31 @@
 ;; Markdown pipe-table cell boundary.
 (define (md-escape s) (string-translate* s '(("|" . "\\|"))))
 
-;; A Markdown pipe-table row, mirroring story-row's label/content shape
-;; so the Markdown export tracks the HTML story table field-for-field.
-;; Pairs with md-table-header, whose alignment markers (---:/: ---)
-;; right-align the Field column and left-align the Value column, the
-;; same layout story-row gives the HTML table.
-(define (md-row label . content)
-  (sprintf "| **~A** | ~A |\n" (md-escape label)
-    (md-escape (apply string-append (map (lambda (x) (sprintf "~A" x)) content)))))
+;; Builds a (label . value-string) pair for one "story so far" field,
+;; mirroring story-row's label/content shape so the Markdown export
+;; tracks the HTML story table field-for-field. Content pieces are
+;; stringified the same way SXML rendering would display them (numbers,
+;; symbols, etc.). Shared by md-table-rows and md-bullet-rows below, so
+;; the two Markdown export styles always show the same fields.
+(define (md-field label . content)
+  (cons label (apply string-append (map (lambda (x) (sprintf "~A" x)) content))))
 
-;; Header + alignment-marker rows for a story-so-far Markdown table;
-;; precedes a run of md-row calls.
-(define (md-table-header)
-  "| Field | Value |\n|---:|:---|\n")
+;; Renders a list of md-field pairs as a GFM pipe table, with alignment
+;; markers (---:/: ---) that right-align the Field column and
+;; left-align the Value column -- the same layout story-row gives the
+;; HTML table.
+(define (md-table-rows fields)
+  (string-append
+    "| Field | Value |\n|---:|:---|\n"
+    (apply string-append
+      (map (lambda (f) (sprintf "| **~A** | ~A |\n" (md-escape (car f)) (md-escape (cdr f))))
+        fields))))
+
+;; Renders a list of md-field pairs as a plain "- **Label:** value"
+;; bullet list, for a Markdown export without a table.
+(define (md-bullet-rows fields)
+  (apply string-append
+    (map (lambda (f) (sprintf "- **~A:** ~A\n" (car f) (cdr f))) fields)))
 
 ;; Registers all pages for this app. Called explicitly at the bottom
 ;; of this module for the interpreted `awful cu-worlds.scm` dev
@@ -560,17 +572,20 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
       (h3 "Interpretation")
       (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?")
 
-      (form (@ (action "/world-markdown"))
-            (input (@ (type "submit") (value "Show as Markdown"))))
+      (form (@ (action "/world-markdown-table"))
+            (input (@ (type "submit") (value "Show as Markdown (Table)"))))
+      (form (@ (action "/world-markdown-list"))
+            (input (@ (type "submit") (value "Show as Markdown (List)"))))
       (form (@ (action ,(main-page-path)))
             (input (@ (type "submit") (value "Start Over")))))))
 
-;; Renders the same results as /world-result, as a block of Markdown
-;; text the GM can copy into their own notes. Reads everything back
-;; out of the session rather than re-deriving it, since every field
-;; here was already resolved (and $session-set!) by /world-result.
-(define-session-page "/world-markdown"
-  (lambda ()
+;; Reads/derives every "story so far" value for the current session
+;; and returns (fields uwp-block), shared by the table and bullet-list
+;; Markdown export pages below so they always show the same data.
+;; Reads everything back out of the session rather than re-deriving
+;; it, since every field here was already resolved (and
+;; $session-set!) by /world-result.
+(define (world-markdown-data)
     (define world-name ($session 'world-name))
     (define hex ($session 'hex))
     (define world-size ($session 'world-size))
@@ -590,43 +605,69 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
     (define uwp (uwp-line starport world-size atmosphere hydrographics population government law-level tech-level))
     (define bases (bases-code naval-base* scout-base*))
 
-    `((h3 "Markdown")
-      (pre ,(string-append
-             "### The story so far\n\n"
-             (md-table-header)
-             (md-row "World Name" world-name)
-             (md-row "Hex" hex)
-             (md-row "World Size" world-size " (" (uwp-char world-size) "): " (size-name world-size))
-             (md-row "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
-             (md-row "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
-             (md-row "Population" population " (" (uwp-char population) "): " (population-name population))
-             (md-row "Starport" starport ": " (starport-description starport))
-             (md-row "Government" government " (" (uwp-char government) "): " (government-name government))
-             (md-row "Law Level" law-level " (" (uwp-char law-level) "): " (law-level-name law-level))
-             (md-row "Tech Level" tech-level ": " (tech-level-name tech-level))
-             (md-row "Trade Codes" (if (null? codes) "None" (string-intersperse codes ", ")))
-             (md-row "Naval Base" (if naval-base* "Yes" "No"))
-             (md-row "Scout Base" (if scout-base* "Yes" "No"))
-             (md-row "Gas Giant Present" (if gas-giant "Yes" "No"))
-             "\n### Universal World Profile\n\n"
-             "`" (string-intersperse
-                  (filter (lambda (s) (not (string=? s "")))
-                          (list world-name hex uwp bases
-                                (if (null? codes) "" (string-intersperse codes ", "))
-                                (if gas-giant "G" "")))
-                  " ")
-             "`\n"
-             "\n### Travel Zones, Climate and a Hook (pp. 298-299)\n\n"
-             "These are Game Master judgment calls, not rolled: Travel Zones (Amber for a dangerous or unstable "
-             "world, Red for one interdicted entirely), a Climate label for the predominant temperature band "
-             "(Frozen, Cold, Cool, Temperate, Warm, Hot, Inferno, or Locked/Eccentric for a tidally-locked or "
-             "highly eccentric orbit), and a single memorable 'hook' -- a signature physical or social detail "
-             "that makes this world distinctive.\n"
-             "\n### Interpretation\n\n"
-             "Write up a summary of the world: what do these results say about its environment, economy and "
-             "society, and what makes it worth visiting (or avoiding)?\n"))
-      (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over"))))))))
+    (list
+      (list
+        (md-field "World Name" world-name)
+        (md-field "Hex" hex)
+        (md-field "World Size" world-size " (" (uwp-char world-size) "): " (size-name world-size))
+        (md-field "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+        (md-field "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+        (md-field "Population" population " (" (uwp-char population) "): " (population-name population))
+        (md-field "Starport" starport ": " (starport-description starport))
+        (md-field "Government" government " (" (uwp-char government) "): " (government-name government))
+        (md-field "Law Level" law-level " (" (uwp-char law-level) "): " (law-level-name law-level))
+        (md-field "Tech Level" tech-level ": " (tech-level-name tech-level))
+        (md-field "Trade Codes" (if (null? codes) "None" (string-intersperse codes ", ")))
+        (md-field "Naval Base" (if naval-base* "Yes" "No"))
+        (md-field "Scout Base" (if scout-base* "Yes" "No"))
+        (md-field "Gas Giant Present" (if gas-giant "Yes" "No")))
+      (string-append
+        "`" (string-intersperse
+             (filter (lambda (s) (not (string=? s "")))
+                     (list world-name hex uwp bases
+                           (if (null? codes) "" (string-intersperse codes ", "))
+                           (if gas-giant "G" "")))
+             " ")
+        "`")))
+
+;; Assembles the fixed narrative sections around a rendered "story so
+;; far" block (either md-table-rows or md-bullet-rows output), shared
+;; by both Markdown export pages.
+(define (world-markdown-text story-block uwp-block)
+  (string-append
+    "### The story so far\n\n"
+    story-block
+    "\n### Universal World Profile\n\n"
+    uwp-block "\n"
+    "\n### Travel Zones, Climate and a Hook (pp. 298-299)\n\n"
+    "These are Game Master judgment calls, not rolled: Travel Zones (Amber for a dangerous or unstable "
+    "world, Red for one interdicted entirely), a Climate label for the predominant temperature band "
+    "(Frozen, Cold, Cool, Temperate, Warm, Hot, Inferno, or Locked/Eccentric for a tidally-locked or "
+    "highly eccentric orbit), and a single memorable 'hook' -- a signature physical or social detail "
+    "that makes this world distinctive.\n"
+    "\n### Interpretation\n\n"
+    "Write up a summary of the world: what do these results say about its environment, economy and "
+    "society, and what makes it worth visiting (or avoiding)?\n"))
+
+(define-session-page "/world-markdown-table"
+  (lambda ()
+    (let* ((data (world-markdown-data))
+           (fields (car data))
+           (uwp-block (cadr data)))
+      `((h3 "Markdown (Table)")
+        (pre ,(world-markdown-text (md-table-rows fields) uwp-block))
+        (form (@ (action ,(main-page-path)))
+              (input (@ (type "submit") (value "Start Over"))))))))
+
+(define-session-page "/world-markdown-list"
+  (lambda ()
+    (let* ((data (world-markdown-data))
+           (fields (car data))
+           (uwp-block (cadr data)))
+      `((h3 "Markdown (List)")
+        (pre ,(world-markdown-text (md-bullet-rows fields) uwp-block))
+        (form (@ (action ,(main-page-path)))
+              (input (@ (type "submit") (value "Start Over")))))))))
 
 (run)
 

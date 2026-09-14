@@ -41,19 +41,31 @@
 ;; Markdown pipe-table cell boundary.
 (define (md-escape s) (string-translate* s '(("|" . "\\|"))))
 
-;; A Markdown pipe-table row, mirroring story-row's label/content shape
-;; so the Markdown export tracks the HTML story table field-for-field.
-;; Pairs with md-table-header, whose alignment markers (---:/: ---)
-;; right-align the Field column and left-align the Value column, the
-;; same layout story-row gives the HTML table.
-(define (md-row label . content)
-  (sprintf "| **~A** | ~A |\n" (md-escape label)
-    (md-escape (apply string-append (map (lambda (x) (sprintf "~A" x)) content)))))
+;; Builds a (label . value-string) pair for one "story so far" field,
+;; mirroring story-row's label/content shape so the Markdown export
+;; tracks the HTML story table field-for-field. Content pieces are
+;; stringified the same way SXML rendering would display them (numbers,
+;; symbols, etc.). Shared by md-table-rows and md-bullet-rows below, so
+;; the two Markdown export styles always show the same fields.
+(define (md-field label . content)
+  (cons label (apply string-append (map (lambda (x) (sprintf "~A" x)) content))))
 
-;; Header + alignment-marker rows for a story-so-far Markdown table;
-;; precedes a run of md-row calls.
-(define (md-table-header)
-  "| Field | Value |\n|---:|:---|\n")
+;; Renders a list of md-field pairs as a GFM pipe table, with alignment
+;; markers (---:/: ---) that right-align the Field column and
+;; left-align the Value column -- the same layout story-row gives the
+;; HTML table.
+(define (md-table-rows fields)
+  (string-append
+    "| Field | Value |\n|---:|:---|\n"
+    (apply string-append
+      (map (lambda (f) (sprintf "| **~A** | ~A |\n" (md-escape (car f)) (md-escape (cdr f))))
+        fields))))
+
+;; Renders a list of md-field pairs as a plain "- **Label:** value"
+;; bullet list, for a Markdown export without a table.
+(define (md-bullet-rows fields)
+  (apply string-append
+    (map (lambda (f) (sprintf "- **~A:** ~A\n" (car f) (cdr f))) fields)))
 
 ;; Registers all pages for this app. Called explicitly at the bottom
 ;; of this module for the interpreted `awful cu-arcs.scm` dev
@@ -883,18 +895,20 @@ if Major race choose 8-10")
       (h3 "Interpretation")
       (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?")
 
-      (form (@ (action "/alien-creation-markdown"))
-            (input (@ (type "submit") (value "Show as Markdown"))))
+      (form (@ (action "/alien-creation-markdown-table"))
+            (input (@ (type "submit") (value "Show as Markdown (Table)"))))
+      (form (@ (action "/alien-creation-markdown-list"))
+            (input (@ (type "submit") (value "Show as Markdown (List)"))))
       (form (@ (action ,(main-page-path)))
             (input (@ (type "submit") (value "Start Over")))))))
 
-;; Renders the same results as /alien-creation-result-9, as a block of
-;; Markdown text the GM can copy into their own notes. Reads
-;; everything back out of the session rather than re-deriving it,
-;; since every field here was already resolved (and $session-set!) by
-;; /alien-creation-result-9.
-(define-session-page "/alien-creation-markdown"
-  (lambda ()
+;; Reads every "story so far" value for the current session and
+;; returns them as a list of md-field pairs, shared by the table and
+;; bullet-list Markdown export pages below so they always show the
+;; same data. Reads everything back out of the session rather than
+;; re-deriving it, since every field here was already resolved (and
+;; $session-set!) by /alien-creation-result-9.
+(define (alien-markdown-fields)
     (define major-or-minor ($session 'major-or-minor))
     (define world-size ($session 'world-size))
     (define atmosphere ($session 'atmosphere))
@@ -928,45 +942,62 @@ if Major race choose 8-10")
     (define lifespan ($session 'lifespan))
     (define physiological-advantage ($session 'physiological-advantage))
 
-    `((h3 "Markdown")
-      (pre ,(string-append
-             "### The story so far\n\n"
-             (md-table-header)
-             (md-row "Major or Minor Race" major-or-minor)
-             (md-row "World Size" world-size " (" (uwp-char world-size) "): " (wt-size-name world-size))
-             (md-row "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (wt-atmosphere-name atmosphere))
-             (md-row "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (wt-hydrographics-name hydrographics))
-             (md-row "Population" population " (" (uwp-char population) "): " (wt-population-name population))
-             (md-row "Government" government " (" (uwp-char government) "): " (wt-government-name government))
-             (md-row "Law Level" law-level " (" (uwp-char law-level) "): " (wt-law-level-name law-level))
-             (md-row "Tech Level" tech-level ": " (wt-tech-level-name tech-level))
-             (md-row "Star Port" starport ": " (wt-starport-description starport))
-             (md-row "Biotype" biotype)
-             (md-row "Subtype" subtype)
-             (md-row "Sex" sex)
-             (md-row "Reproduction" reproduction)
-             (md-row "Amphibious" amphibious)
-             (md-row "Locomotion" locomotion)
-             (md-row "Symmetry" symmetry)
-             (md-row "Number of Legs" legs)
-             (md-row "Size" size)
-             (md-row "Strength" str-formula)
-             (md-row "Dexterity" dex-formula)
-             (md-row "Endurance" end-formula)
-             (md-row "Intelligence" int-formula)
-             (md-row "Education" edu-formula)
-             (md-row "Social" soc-formula)
-             (md-row "Armour" armour)
-             (md-row "Natural Weapon" natural-weapon)
-             (md-row "Vision" vision)
-             (md-row "Audio" audio)
-             (md-row "Olfactory" olfactory)
-             (md-row "Special Sense" special-sense)
-             (md-row "Lifespan" lifespan)
-             (md-row "Physiological Advantage" physiological-advantage)
-             "\n### Interpretation\n\n"
-             "Write up a summary of the alien species: what do these results say about how the race lives "
-             "today, and how has their evolution or physiology shaped their society and outlook?\n"))
+    (list
+      (md-field "Major or Minor Race" major-or-minor)
+      (md-field "World Size" world-size " (" (uwp-char world-size) "): " (wt-size-name world-size))
+      (md-field "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (wt-atmosphere-name atmosphere))
+      (md-field "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (wt-hydrographics-name hydrographics))
+      (md-field "Population" population " (" (uwp-char population) "): " (wt-population-name population))
+      (md-field "Government" government " (" (uwp-char government) "): " (wt-government-name government))
+      (md-field "Law Level" law-level " (" (uwp-char law-level) "): " (wt-law-level-name law-level))
+      (md-field "Tech Level" tech-level ": " (wt-tech-level-name tech-level))
+      (md-field "Star Port" starport ": " (wt-starport-description starport))
+      (md-field "Biotype" biotype)
+      (md-field "Subtype" subtype)
+      (md-field "Sex" sex)
+      (md-field "Reproduction" reproduction)
+      (md-field "Amphibious" amphibious)
+      (md-field "Locomotion" locomotion)
+      (md-field "Symmetry" symmetry)
+      (md-field "Number of Legs" legs)
+      (md-field "Size" size)
+      (md-field "Strength" str-formula)
+      (md-field "Dexterity" dex-formula)
+      (md-field "Endurance" end-formula)
+      (md-field "Intelligence" int-formula)
+      (md-field "Education" edu-formula)
+      (md-field "Social" soc-formula)
+      (md-field "Armour" armour)
+      (md-field "Natural Weapon" natural-weapon)
+      (md-field "Vision" vision)
+      (md-field "Audio" audio)
+      (md-field "Olfactory" olfactory)
+      (md-field "Special Sense" special-sense)
+      (md-field "Lifespan" lifespan)
+      (md-field "Physiological Advantage" physiological-advantage)))
+
+;; Assembles the fixed narrative sections around a rendered "story so
+;; far" block (either md-table-rows or md-bullet-rows output), shared
+;; by both Markdown export pages.
+(define (alien-markdown-text story-block)
+  (string-append
+    "### The story so far\n\n"
+    story-block
+    "\n### Interpretation\n\n"
+    "Write up a summary of the alien species: what do these results say about how the race lives "
+    "today, and how has their evolution or physiology shaped their society and outlook?\n"))
+
+(define-session-page "/alien-creation-markdown-table"
+  (lambda ()
+    `((h3 "Markdown (Table)")
+      (pre ,(alien-markdown-text (md-table-rows (alien-markdown-fields))))
+      (form (@ (action ,(main-page-path)))
+            (input (@ (type "submit") (value "Start Over")))))))
+
+(define-session-page "/alien-creation-markdown-list"
+  (lambda ()
+    `((h3 "Markdown (List)")
+      (pre ,(alien-markdown-text (md-bullet-rows (alien-markdown-fields))))
       (form (@ (action ,(main-page-path)))
             (input (@ (type "submit") (value "Start Over"))))))))
 

@@ -189,6 +189,12 @@ There is no test coverage for `cu-arcs.scm` or `cu-worlds.scm` themselves
 (the `awful`/HTML web layer — the `test-*-e2e.sh` scripts exercise them
 indirectly over HTTP), `tables.scm`, `sa-acs.scm`, or `dice.scm`.
 
+`GNUmakefile` also has targets for all four: `make test` runs everything;
+`make test-unit` runs just the two unit-test files; `make test-e2e` runs
+just the two end-to-end scripts; `make test-alien-tables`,
+`make test-worlds-tables`, `make test-e2e-arcs`, and `make test-e2e-worlds`
+run one each.
+
 ## Local modules
 
 This project has no egg packaging — for interactive dev use, `awful`

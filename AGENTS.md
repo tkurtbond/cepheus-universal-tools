@@ -37,6 +37,17 @@ finished product — several files are stubs or mid-rewrite.
   `build/cu-unified-server` on port 8100 by default, mirroring
   `cu-arcs-server-local.sh`.
 
+- `cu-unified-consp.sh` — Launcher script for `cu-unified.scm`, bound to
+  a specific external address (consp.org)
+  (`awful --ip-address=71.19.158.45 --port=8100 cu-unified.scm`).
+
+- `cu-unified-static-consp.sh` — Runs the compiled
+  `build/cu-unified-server` bound to that same consp.org address on
+  port 8100 by default, mirroring `cu-unified-server-local.sh` but for
+  the consp.org deployment; see "Static executables (awful-main)"
+  below for why the wrapper -- not the binary itself -- supplies that
+  default.
+
 - `cu-arcs.scm` — "Cepheus Universal Alien Race Creation System." The
   active app. A full implementation of the rulebook's "Alien Race
   Creation" section (Cepheus Universal pp. 326-329), as an 11-page `awful`
@@ -122,6 +133,11 @@ finished product — several files are stubs or mid-rewrite.
   below for why this wrapper -- not the binary itself -- is what
   supplies that default.
 
+- `cu-arcs-static-consp.sh` — Runs the compiled `build/cu-arcs-server`
+  bound to `cu-arcs-consp.sh`'s same consp.org address on port 8101 by
+  default, mirroring `cu-arcs-server-local.sh` but for the consp.org
+  deployment.
+
 - `cu-worlds.scm` — "Cepheus Universal Creating Worlds" app. A full
   implementation of the rulebook's "Creating Worlds" section (Cepheus
   Universal pp. 281-302), as an 11-page `awful` wizard producing a single
@@ -171,6 +187,15 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-worlds-server-local.sh` — Runs the compiled `build/cu-worlds-server`
   on port 8102 by default, mirroring `cu-arcs-server-local.sh`.
+
+- `cu-worlds-consp.sh` — Launcher script for `cu-worlds.scm`, bound to
+  the same consp.org address as `cu-arcs-consp.sh`, on port 8102
+  (`awful --ip-address=71.19.158.45 --port=8102 cu-worlds.scm`).
+
+- `cu-worlds-static-consp.sh` — Runs the compiled `build/cu-worlds-server`
+  bound to that same consp.org address on port 8102 by default,
+  mirroring `cu-worlds-server-local.sh` but for the consp.org
+  deployment.
 
 - `cu-systems.scm` — "Cepheus Universal System Generation" app. Populates
   the rest of a star system around an already-known mainworld (Cepheus
@@ -226,6 +251,15 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-systems-server-local.sh` — Runs the compiled `build/cu-systems-server`
   on port 8103 by default, mirroring `cu-arcs-server-local.sh`.
+
+- `cu-systems-consp.sh` — Launcher script for `cu-systems.scm`, bound to
+  the same consp.org address as `cu-arcs-consp.sh`, on port 8103
+  (`awful --ip-address=71.19.158.45 --port=8103 cu-systems.scm`).
+
+- `cu-systems-static-consp.sh` — Runs the compiled `build/cu-systems-server`
+  bound to that same consp.org address on port 8103 by default,
+  mirroring `cu-systems-server-local.sh` but for the consp.org
+  deployment.
 
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
   marked "Just a reminder, for now." Stub module that only imports

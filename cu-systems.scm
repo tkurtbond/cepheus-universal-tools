@@ -2,6 +2,11 @@
 ;;; Populates the rest of a star system around an existing mainworld.
 ;;;
 ;;; awful --port=8103 cu-systems.scm
+;;;
+;;; Standalone, this app's own entry page is at "/systems" (not "/"),
+;;; so it can be mounted under cu-unified.scm alongside cu-arcs.scm and
+;;; cu-worlds.scm without colliding with their own entry pages or with
+;;; the unified app's own hub page at "/".
 (include "worlds-tables.scm")
 (include "system-tables.scm")
 
@@ -301,8 +306,10 @@
             (input (@ (type "submit") (value "Show as Markdown (Table)"))))
       (form (@ (action "/system-markdown-list"))
             (input (@ (type "submit") (value "Show as Markdown (List)"))))
+      (form (@ (action "/systems"))
+            (input (@ (type "submit") (value "Return to Systems"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Return to Start")))))))
 
 ;; Assembles the story-so-far fields plus one field per orbit, shared
 ;; by both Markdown export pages below.
@@ -332,7 +339,7 @@
            (md-field "Mainworld Temperature" "Temperate")))
       (map (lambda (row) (md-field (sprintf "Orbit ~A: ~A" (car row) (cadr row)) (caddr row))) rows))))
 
-(define-session-page (main-page-path)
+(define-session-page "/systems"
   (lambda ()
     `((h3 "System Generation")
       (form (@ (action "/orbits-result"))
@@ -563,15 +570,19 @@
   (lambda ()
     `((h3 "Markdown (Table)")
       (pre ,(md-table-rows (system-markdown-fields)))
+      (form (@ (action "/systems"))
+            (input (@ (type "submit") (value "Return to Systems"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Return to Start")))))))
 
 (define-session-page "/system-markdown-list"
   (lambda ()
     `((h3 "Markdown (List)")
       (pre ,(md-bullet-rows (system-markdown-fields)))
+      (form (@ (action "/systems"))
+            (input (@ (type "submit") (value "Return to Systems"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over"))))))))
+            (input (@ (type "submit") (value "Return to Start"))))))))
 
 (run)
 

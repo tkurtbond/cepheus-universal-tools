@@ -5,9 +5,10 @@
 #   make run-arcs        build (if needed) and run the cu-arcs server
 #   make run-worlds      build (if needed) and run the cu-worlds server
 #   make run-systems     build (if needed) and run the cu-systems server
+#   make run-unified     build (if needed) and run the cu-unified server
 #   make test            run every test below
 #   make test-unit       run the alien-tables/worlds-tables/system-tables unit tests
-#   make test-e2e        run all three end-to-end smoke tests
+#   make test-e2e        run all four end-to-end smoke tests
 #   make clean           remove build/
 
 CSC = csc
@@ -16,13 +17,13 @@ CSI = csi
 
 BUILD_DIR = build
 
-APPS = cu-arcs cu-worlds cu-systems
+APPS = cu-arcs cu-worlds cu-systems cu-unified
 
 EXECUTABLES = $(APPS:%=$(BUILD_DIR)/%-server)
 
-.PHONY: all clean run-arcs run-worlds run-systems test test-unit test-e2e \
+.PHONY: all clean run-arcs run-worlds run-systems run-unified test test-unit test-e2e \
 	test-alien-tables test-worlds-tables test-system-tables \
-	test-e2e-arcs test-e2e-worlds test-e2e-systems
+	test-e2e-arcs test-e2e-worlds test-e2e-systems test-e2e-unified
 
 all: $(EXECUTABLES)
 
@@ -33,6 +34,10 @@ $(BUILD_DIR)/cu-worlds-server: cu-worlds-main.scm cu-worlds.scm worlds-tables.sc
 	$(CSC) $(CSC_FLAGS) -o $@ $<
 
 $(BUILD_DIR)/cu-systems-server: cu-systems-main.scm cu-systems.scm system-tables.scm worlds-tables.scm roll-tables.scm | $(BUILD_DIR)
+	$(CSC) $(CSC_FLAGS) -o $@ $<
+
+$(BUILD_DIR)/cu-unified-server: cu-unified-main.scm cu-unified.scm cu-arcs.scm cu-worlds.scm cu-systems.scm \
+                                 alien-tables.scm worlds-tables.scm system-tables.scm roll-tables.scm | $(BUILD_DIR)
 	$(CSC) $(CSC_FLAGS) -o $@ $<
 
 $(BUILD_DIR):
@@ -47,6 +52,9 @@ run-worlds: $(BUILD_DIR)/cu-worlds-server
 run-systems: $(BUILD_DIR)/cu-systems-server
 	$(BUILD_DIR)/cu-systems-server --port=8103
 
+run-unified: $(BUILD_DIR)/cu-unified-server
+	$(BUILD_DIR)/cu-unified-server --port=8100
+
 test: test-unit test-e2e
 
 test-unit: test-alien-tables test-worlds-tables test-system-tables
@@ -60,7 +68,7 @@ test-worlds-tables: test-worlds-tables.scm worlds-tables.scm roll-tables.scm
 test-system-tables: test-system-tables.scm system-tables.scm worlds-tables.scm roll-tables.scm
 	$(CSI) -s test-system-tables.scm
 
-test-e2e: test-e2e-arcs test-e2e-worlds test-e2e-systems
+test-e2e: test-e2e-arcs test-e2e-worlds test-e2e-systems test-e2e-unified
 
 test-e2e-arcs: test-e2e.sh cu-arcs.scm
 	./test-e2e.sh
@@ -70,6 +78,9 @@ test-e2e-worlds: test-worlds-e2e.sh cu-worlds.scm
 
 test-e2e-systems: test-systems-e2e.sh cu-systems.scm
 	./test-systems-e2e.sh
+
+test-e2e-unified: test-unified-e2e.sh cu-unified.scm cu-arcs.scm cu-worlds.scm cu-systems.scm
+	./test-unified-e2e.sh
 
 clean:
 	rm -rf $(BUILD_DIR)

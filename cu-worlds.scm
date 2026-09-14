@@ -2,6 +2,11 @@
 ;;; Generates a Universal World Profile for a single mainworld.
 ;;;
 ;;; awful --port=8102 cu-worlds.scm
+;;;
+;;; Standalone, this app's own entry page is at "/worlds" (not "/"), so
+;;; it can be mounted under cu-unified.scm alongside cu-arcs.scm and
+;;; cu-systems.scm without colliding with their own entry pages or
+;;; with the unified app's own hub page at "/".
 (include "worlds-tables.scm")
 
 (module cu-worlds (run)
@@ -67,7 +72,7 @@
 ;; inside awful-start) -- the second registration is harmless.
 (define (run . args)
 
-(define-session-page (main-page-path)
+(define-session-page "/worlds"
   (lambda ()
     `((h3 "Creating Worlds")
       (form (@ (action "/world-size-result"))
@@ -576,8 +581,10 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
             (input (@ (type "submit") (value "Show as Markdown (Table)"))))
       (form (@ (action "/world-markdown-list"))
             (input (@ (type "submit") (value "Show as Markdown (List)"))))
+      (form (@ (action "/worlds"))
+            (input (@ (type "submit") (value "Return to Worlds"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Return to Start")))))))
 
 ;; Reads/derives every "story so far" value for the current session
 ;; and returns (fields uwp-block), shared by the table and bullet-list
@@ -656,8 +663,10 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
            (uwp-block (cadr data)))
       `((h3 "Markdown (Table)")
         (pre ,(world-markdown-text (md-table-rows fields) uwp-block))
+        (form (@ (action "/worlds"))
+              (input (@ (type "submit") (value "Return to Worlds"))))
         (form (@ (action ,(main-page-path)))
-              (input (@ (type "submit") (value "Start Over"))))))))
+              (input (@ (type "submit") (value "Return to Start"))))))))
 
 (define-session-page "/world-markdown-list"
   (lambda ()
@@ -666,8 +675,10 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
            (uwp-block (cadr data)))
       `((h3 "Markdown (List)")
         (pre ,(world-markdown-text (md-bullet-rows fields) uwp-block))
+        (form (@ (action "/worlds"))
+              (input (@ (type "submit") (value "Return to Worlds"))))
         (form (@ (action ,(main-page-path)))
-              (input (@ (type "submit") (value "Start Over")))))))))
+              (input (@ (type "submit") (value "Return to Start")))))))))
 
 (run)
 

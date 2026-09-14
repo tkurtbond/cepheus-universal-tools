@@ -2,6 +2,11 @@
 ;;; Creates intelligent aliens.
 ;;;
 ;;; awful --port=8101 cu-arcs.scm
+;;;
+;;; Standalone, this app's own entry page is at "/arcs" (not "/"), so
+;;; it can be mounted under cu-unified.scm alongside cu-worlds.scm and
+;;; cu-systems.scm without colliding with their own entry pages or
+;;; with the unified app's own hub page at "/".
 (include "alien-tables.scm")
 (include "worlds-tables.scm")
 
@@ -73,7 +78,7 @@
 ;; inside awful-start) -- the second registration is harmless.
 (define (run . args)
 
-(define-session-page (main-page-path)
+(define-session-page "/arcs"
   (lambda ()
     `((h3 "Alien Race Creation - Major or Minor Race")
       (form (@ (action "/major-minor-result"))
@@ -899,8 +904,10 @@ if Major race choose 8-10")
             (input (@ (type "submit") (value "Show as Markdown (Table)"))))
       (form (@ (action "/alien-creation-markdown-list"))
             (input (@ (type "submit") (value "Show as Markdown (List)"))))
+      (form (@ (action "/arcs"))
+            (input (@ (type "submit") (value "Return to ARCS"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Return to Start")))))))
 
 ;; Reads every "story so far" value for the current session and
 ;; returns them as a list of md-field pairs, shared by the table and
@@ -991,15 +998,19 @@ if Major race choose 8-10")
   (lambda ()
     `((h3 "Markdown (Table)")
       (pre ,(alien-markdown-text (md-table-rows (alien-markdown-fields))))
+      (form (@ (action "/arcs"))
+            (input (@ (type "submit") (value "Return to ARCS"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over")))))))
+            (input (@ (type "submit") (value "Return to Start")))))))
 
 (define-session-page "/alien-creation-markdown-list"
   (lambda ()
     `((h3 "Markdown (List)")
       (pre ,(alien-markdown-text (md-bullet-rows (alien-markdown-fields))))
+      (form (@ (action "/arcs"))
+            (input (@ (type "submit") (value "Return to ARCS"))))
       (form (@ (action ,(main-page-path)))
-            (input (@ (type "submit") (value "Start Over"))))))))
+            (input (@ (type "submit") (value "Return to Start"))))))))
 
 (run)
 

@@ -8,6 +8,35 @@ finished product — several files are stubs or mid-rewrite.
 
 ## Files
 
+- `cu-unified.scm` — Combines `cu-arcs.scm`, `cu-worlds.scm` and
+  `cu-systems.scm` into a single running site. `(include ...)`s all
+  three sibling `.scm` files (each producing its own top-level module,
+  as usual -- see "Local modules" below), then imports each module's
+  `run` with a distinct prefix (`(import (prefix cu-arcs arcs-))`, and
+  likewise for worlds/systems) to avoid a name clash with its own
+  `run`. Registers a hub page at "/" with a button to each sub-app's
+  own entry page ("/arcs", "/worlds", "/systems" -- see the note atop
+  each of those files), then calls each sub-app's `run` in turn.
+  Because each sub-app's own final-page and Markdown-export buttons
+  already point at both its own entry page (relabelled "Return to
+  ARCS"/"Return to Worlds"/"Return to Systems") and the unified hub
+  ("Return to Start", pointing at `(main-page-path)`, which this
+  module -- not the sub-apps -- registers), no per-app changes are
+  needed to run standalone vs. unified; only the target of "Return to
+  Start" differs (a 404 if that sub-app is run standalone, since
+  nothing registers "/" in that case). Run with `./cu-unified-local.sh`
+  (below), or directly via `awful --port=8100 cu-unified.scm`.
+
+- `cu-unified-local.sh` — Launcher for `cu-unified.scm` bound to
+  `127.0.0.1:8100`, for local interactive use.
+
+- `cu-unified-main.scm` — `awful-main` entry point for `cu-unified.scm`;
+  see "Static executables (awful-main)" below.
+
+- `cu-unified-server-local.sh` — Runs the compiled
+  `build/cu-unified-server` on port 8100 by default, mirroring
+  `cu-arcs-server-local.sh`.
+
 - `cu-arcs.scm` — "Cepheus Universal Alien Race Creation System." The
   active app. A full implementation of the rulebook's "Alien Race
   Creation" section (Cepheus Universal pp. 326-329), as an 11-page `awful`
@@ -21,9 +50,14 @@ finished product — several files are stubs or mid-rewrite.
   Sense) → Life Cycle (Lifespan, Physiological Advantage), ending on the
   book's Interpretation prompt. Breathing and Interpretation have no
   rollable table in the book and are narrative-only, with no form step.
-  Run with `./cu-arcs-local.sh` (below), or directly via
-  `awful --port=8101 cu-arcs.scm` (per the file's header comment). This
-  supersedes an earlier single-page v1 prototype, whose contents have
+  Its own entry page is at "/arcs" (not "/"), so it can be mounted
+  under `cu-unified.scm` alongside the other two apps; the final page
+  and both Markdown exports offer "Return to ARCS" (back to "/arcs")
+  and "Return to Start" (back to `(main-page-path)`, i.e. "/" -- only
+  meaningful when mounted under `cu-unified.scm`; standalone, nothing
+  is registered at "/"). Run with `./cu-arcs-local.sh` (below), or
+  directly via `awful --port=8101 cu-arcs.scm` (per the file's header
+  comment). This supersedes an earlier single-page v1 prototype, whose contents have
   since been replaced in place by this wizard. Each "story so far"
   summary renders as a two-column SXML table (`story-row`/`story-table`,
   defined in this file, mirroring the identical helpers in
@@ -106,8 +140,13 @@ finished product — several files are stubs or mid-rewrite.
   0.45g)". Verified end to end
   against the rulebook's own worked example, Lorcan (pp. 301-302): see
   "Lorcan worked example" in `test-worlds-tables.scm` and the second
-  half of `test-worlds-e2e.sh`. Run with `./cu-worlds-local.sh` (below),
-  or directly via `awful --port=8102 cu-worlds.scm`.
+  half of `test-worlds-e2e.sh`. Its own entry page is at "/worlds" (not
+  "/"), so it can be mounted under `cu-unified.scm` alongside the other
+  two apps; the final page and both Markdown exports offer "Return to
+  Worlds" (back to "/worlds") and "Return to Start" (back to
+  `(main-page-path)`, meaningful only when mounted under
+  `cu-unified.scm`). Run with `./cu-worlds-local.sh` (below), or
+  directly via `awful --port=8102 cu-worlds.scm`.
 
 - `worlds-tables.scm` — All the rules tables and resolvers behind
   `cu-worlds.scm`, factored out into their own Chicken module
@@ -161,9 +200,13 @@ finished product — several files are stubs or mid-rewrite.
   content, unlike the rest of the section). `bodies`/`moon-of` are
   generated once (`finish-system!`) and `$session-set!`, not
   re-rolled — every render after that (the result page, both Markdown
-  exports) reads them back via `system-data`. Run with
-  `./cu-systems-local.sh` (below), or directly via
-  `awful --port=8103 cu-systems.scm`.
+  exports) reads them back via `system-data`. Its own entry page is at
+  "/systems" (not "/"), so it can be mounted under `cu-unified.scm`
+  alongside the other two apps; the final page and both Markdown
+  exports offer "Return to Systems" (back to "/systems") and "Return to
+  Start" (back to `(main-page-path)`, meaningful only when mounted
+  under `cu-unified.scm`). Run with `./cu-systems-local.sh` (below), or
+  directly via `awful --port=8103 cu-systems.scm`.
 
 - `system-tables.scm` — All the rules tables and resolvers behind
   `cu-systems.scm`, factored out into their own Chicken module
@@ -206,8 +249,8 @@ finished product — several files are stubs or mid-rewrite.
   Cepheus itself.
 
 - `GNUmakefile` — Builds standalone static executables for `cu-arcs.scm`,
-  `cu-worlds.scm` and `cu-systems.scm` via the `awful-main` egg; see
-  "Static executables (awful-main)" below.
+  `cu-worlds.scm`, `cu-systems.scm` and `cu-unified.scm` via the
+  `awful-main` egg; see "Static executables (awful-main)" below.
 
 ## Testing
 
@@ -267,16 +310,28 @@ finished product — several files are stubs or mid-rewrite.
   (checking the companion-placement and full-UWP branches, including the
   exact resulting UWP line). Run with `./test-systems-e2e.sh`.
 
-There is no test coverage for `cu-arcs.scm`, `cu-worlds.scm` or
-`cu-systems.scm` themselves (the `awful`/HTML web layer — the
-`test-*-e2e.sh` scripts exercise them indirectly over HTTP), `tables.scm`,
-`sa-acs.scm`, or `dice.scm`.
+- `test-unified-e2e.sh` — End-to-end smoke test for `cu-unified.scm`, on
+  port 8200 (the test suite's own port range; see `test-e2e.sh` above):
+  checks the hub page at "/" links to all three sub-apps, that each
+  sub-app's own entry page is reachable at its mounted path ("/arcs",
+  "/worlds", "/systems") rather than "/", and that a quick walk of the
+  Alien Race Creation wizard through the unified server reaches a final
+  page offering "Return to ARCS" and "Return to Start" (not the old
+  single-app "Start Over" button). Doesn't re-check each sub-app's own
+  table/wizard correctness -- that's already covered by `test-e2e.sh`,
+  `test-worlds-e2e.sh` and `test-systems-e2e.sh` -- only the
+  unification wiring itself. Run with `./test-unified-e2e.sh`.
 
-`GNUmakefile` also has targets for all six: `make test` runs everything;
+There is no test coverage for `cu-arcs.scm`, `cu-worlds.scm`,
+`cu-systems.scm` or `cu-unified.scm` themselves (the `awful`/HTML web
+layer — the `test-*-e2e.sh` scripts exercise them indirectly over
+HTTP), `tables.scm`, `sa-acs.scm`, or `dice.scm`.
+
+`GNUmakefile` also has targets for all seven: `make test` runs everything;
 `make test-unit` runs the three unit-test files; `make test-e2e` runs all
-three end-to-end scripts; `make test-alien-tables`, `make test-worlds-tables`,
+four end-to-end scripts; `make test-alien-tables`, `make test-worlds-tables`,
 `make test-system-tables`, `make test-e2e-arcs`, `make test-e2e-worlds`,
-and `make test-e2e-systems` run one each.
+`make test-e2e-systems`, and `make test-e2e-unified` run one each.
 
 ## Local modules
 
@@ -291,17 +346,21 @@ deliberately isn't wrapped in a module — it's just `(include
 
 ## Static executables (awful-main)
 
-`cu-arcs.scm`, `cu-worlds.scm` and `cu-systems.scm` can also be built
-into standalone binaries (no Chicken install needed to run them) using
-the `awful-main` egg (`chicken-install awful-main`; also requires
-`spiffy`, already an `awful` dependency):
+`cu-arcs.scm`, `cu-worlds.scm`, `cu-systems.scm` and `cu-unified.scm`
+can also be built into standalone binaries (no Chicken install needed
+to run them) using the `awful-main` egg (`chicken-install awful-main`;
+also requires `spiffy`, already an `awful` dependency):
 
-- `cu-arcs-main.scm` / `cu-worlds-main.scm` / `cu-systems-main.scm` are
-  the `awful-main` entry points: each `(include ...)` its app's `.scm`
-  file, then instantiates the `(awful main)` functor over that app's
-  module (e.g. `(module main = ((awful main) cu-arcs))`). `awful-main`
-  generates the CLI parsing (`--addr`, `--port`, `--access-log`,
-  `--web-root`, `--dev`, etc.) and startup wiring around the app.
+- `cu-arcs-main.scm` / `cu-worlds-main.scm` / `cu-systems-main.scm` /
+  `cu-unified-main.scm` are the `awful-main` entry points: each
+  `(include ...)` its app's `.scm` file, then instantiates the `(awful
+  main)` functor over that app's module (e.g. `(module main = ((awful
+  main) cu-arcs))`). `awful-main` generates the CLI parsing (`--addr`,
+  `--port`, `--access-log`, `--web-root`, `--dev`, etc.) and startup
+  wiring around the app. `awful-main` only supports a single `S` module
+  per binary, which is why `cu-unified.scm` combines all three apps'
+  `run` procedures into one before being wrapped this way, rather than
+  the functor being instantiated three times over.
 - The functor requires the app's module to export a `run` procedure,
   which it calls *from inside* `awful-start`'s startup thunk — pages
   registered any earlier (e.g. purely as top-level side effects of
@@ -316,22 +375,27 @@ the `awful-main` egg (`chicken-install awful-main`; also requires
   what registers pages for the plain interpreted `awful cu-arcs.scm` dev
   workflow, which never calls `run` itself; the compiled binary calls
   `run` a second time via `awful-start`, which is harmless (just
-  re-registers the same handlers).
-- Build all three with `make` (see `GNUmakefile`); executables land in
-  `build/` (gitignored) as `build/cu-arcs-server`, `build/cu-worlds-server`
-  and `build/cu-systems-server`, alongside an empty `build/static/` (the
-  default `--web-root`). `make run-arcs` / `make run-worlds` /
-  `make run-systems` build (if needed) and run one directly on its
-  standard port (8101/8102/8103); `make clean` removes `build/`. To
-  build by hand: `csc -static -o build/cu-arcs-server cu-arcs-main.scm`
-  (same pattern for the other two).
+  re-registers the same handlers). `cu-unified.scm` follows the same
+  shape: its own `run` registers the hub page at "/" and then calls
+  each sub-app's `run` (imported with a distinct prefix -- `arcs-run`,
+  `worlds-run`, `systems-run` -- to avoid colliding with its own `run`).
+- Build all four with `make` (see `GNUmakefile`); executables land in
+  `build/` (gitignored) as `build/cu-arcs-server`, `build/cu-worlds-server`,
+  `build/cu-systems-server` and `build/cu-unified-server`, alongside an
+  empty `build/static/` (the default `--web-root`). `make run-arcs` /
+  `make run-worlds` / `make run-systems` / `make run-unified` build (if
+  needed) and run one directly on its standard port
+  (8101/8102/8103/8100); `make clean` removes `build/`. To build by
+  hand: `csc -static -o build/cu-arcs-server cu-arcs-main.scm` (same
+  pattern for the others).
 - awful-main's own default port (8080) is hardcoded inside the egg's
   functor body -- there's no hook for a calling module like
   `cu-arcs-main.scm` to change it, so a bare `build/cu-arcs-server` with
   no arguments always binds to 8080, not 8101. `cu-arcs-server-local.sh`
-  / `cu-worlds-server-local.sh` / `cu-systems-server-local.sh` are thin
-  wrappers that supply each app's standard port (8101/8102/8103)
-  themselves and then forward any of their own arguments; an explicit
-  `--port=...` passed to the wrapper still wins, since awful-main's
-  argument parser is a simple left-to-right pass where the last
-  `--port=` seen is the one that sticks.
+  / `cu-worlds-server-local.sh` / `cu-systems-server-local.sh` /
+  `cu-unified-server-local.sh` are thin wrappers that supply each app's
+  standard port (8101/8102/8103/8100) themselves and then forward any
+  of their own arguments; an explicit `--port=...` passed to the
+  wrapper still wins, since awful-main's argument parser is a simple
+  left-to-right pass where the last `--port=` seen is the one that
+  sticks.

@@ -4,7 +4,7 @@
 ;;; awful --port=2021 cu-worlds.scm
 (include "worlds-tables.scm")
 
-(module cu-worlds ()
+(module cu-worlds (run)
 
 (import scheme)
 (import (chicken base))
@@ -28,6 +28,12 @@
 
 (define (story-table . rows)
   `(table (@ (style "border-collapse:collapse")) ,@rows))
+
+;; Registers all pages for this app. Called explicitly at the bottom
+;; of this module for the interpreted `awful cu-worlds.scm` dev
+;; workflow, and again by the compiled awful-main entry point (from
+;; inside awful-start) -- the second registration is harmless.
+(define (run . args)
 
 (define-session-page (main-page-path)
   (lambda ()
@@ -532,6 +538,8 @@ Temperate, Warm, Hot, Inferno, or Locked/Eccentric for a tidally-locked or highl
 memorable 'hook' -- a signature physical or social detail that makes this world distinctive.")
 
       (h3 "Interpretation")
-      (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?"))))
+      (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?")))))
+
+(run)
 
 )

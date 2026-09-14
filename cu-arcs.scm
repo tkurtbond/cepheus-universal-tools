@@ -5,7 +5,7 @@
 (include "alien-tables.scm")
 (include "worlds-tables.scm")
 
-(module cu-arcs ()
+(module cu-arcs (run)
 
 (import scheme)
 (import (chicken base))
@@ -34,6 +34,12 @@
 
 (define (story-table . rows)
   `(table (@ (style "border-collapse:collapse")) ,@rows))
+
+;; Registers all pages for this app. Called explicitly at the bottom
+;; of this module for the interpreted `awful cu-arcs.scm` dev
+;; workflow, and again by the compiled awful-main entry point (from
+;; inside awful-start) -- the second registration is harmless.
+(define (run . args)
 
 (define-session-page (main-page-path)
   (lambda ()
@@ -855,5 +861,8 @@ if Major race choose 8-10")
         (story-row "Lifespan" `(b ,lifespan))
         (story-row "Physiological Advantage" `(b ,physiological-advantage)))
       (h3 "Interpretation")
-      (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?"))))
+      (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?")))))
+
+(run)
+
 )

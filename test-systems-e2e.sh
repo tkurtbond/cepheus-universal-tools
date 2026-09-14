@@ -18,7 +18,7 @@ set -u
 
 cd "$(dirname "$0")"
 
-PORT=18083
+PORT=8203
 BASE="http://127.0.0.1:$PORT"
 COOKIES=$(mktemp)
 LOG=$(mktemp)

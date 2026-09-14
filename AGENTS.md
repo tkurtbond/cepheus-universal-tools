@@ -221,13 +221,14 @@ finished product — several files are stubs or mid-rewrite.
   with repeated trials against the valid range/set instead.
 
 - `test-e2e.sh` — End-to-end smoke test. Starts a throwaway `awful`
-  instance on port 18080, walks the full 10-page wizard over HTTP with
+  instance on port 8201 (the test suite's own port range, distinct from
+  8101-8103 for interactive use, so a test run never collides with an
+  already-running server), walks the full 10-page wizard over HTTP with
   `curl`, and checks that every expected field label appears on the final
   page (catches routing/session/template mistakes, not table
   correctness), plus a few deterministic boundary cases via the "Choose"
   path (e.g. Major Race Starport is always "A" regardless of roll). Run
-  with `./test-e2e.sh`; it starts and tears down its own server, so it
-  won't collide with `cu-arcs-local.sh` on port 8101.
+  with `./test-e2e.sh`.
 
 - `test-worlds-tables.scm` — Unit tests for `worlds-tables.scm`, mirroring
   `test-alien-tables.scm`'s approach: exact expected values for the
@@ -238,8 +239,8 @@ finished product — several files are stubs or mid-rewrite.
   Run with `csi -s test-worlds-tables.scm`.
 
 - `test-worlds-e2e.sh` — End-to-end smoke test for `cu-worlds.scm`, on
-  port 18082 (so it doesn't collide with `test-e2e.sh` or
-  `cu-worlds-local.sh`): the "Roll everything" path plus the Lorcan
+  port 8202 (the test suite's own port range; see `test-e2e.sh` above):
+  the "Roll everything" path plus the Lorcan
   example again, this time walked over HTTP via the "Choose" path,
   checking the final page's UWP line matches the book's exactly
   ("Lorcan E5A6595-8 Fluid Oceans, Non-Industrial G"). Run with
@@ -257,7 +258,8 @@ finished product — several files are stubs or mid-rewrite.
   rolls the way Lorcan's does. Run with `csi -s test-system-tables.scm`.
 
 - `test-systems-e2e.sh` — End-to-end smoke test for `cu-systems.scm`, on
-  port 18083: a single-star "Roll everything" walkthrough, a single-star
+  port 8203 (the test suite's own port range; see `test-e2e.sh` above):
+  a single-star "Roll everything" walkthrough, a single-star
   Rock mainworld walked via "Choose" (checking the Planetary Details
   branch and that both Markdown exports reproduce the same
   already-generated system rather than rerolling it), and a binary-star

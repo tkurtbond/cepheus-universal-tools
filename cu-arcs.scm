@@ -13,6 +13,7 @@
 (import (math base))
 (import loop)
 (import srfi-13)
+(import (only (chicken format) sprintf))
 (import awful)
 (import alien-tables)
 ;; Prefixed to avoid clashing with alien-tables' own D/nD/size-name --
@@ -34,6 +35,14 @@
 
 (define (story-table . rows)
   `(table (@ (style "border-collapse:collapse")) ,@rows))
+
+;; A "- **Label:** content" Markdown list item, mirroring story-row's
+;; label/content shape so the Markdown export tracks the HTML story
+;; table field-for-field. Content pieces are stringified the same way
+;; SXML rendering would display them (numbers, symbols, etc.).
+(define (md-row label . content)
+  (sprintf "- **~A:** ~A\n" label
+    (apply string-append (map (lambda (x) (sprintf "~A" x)) content))))
 
 ;; Registers all pages for this app. Called explicitly at the bottom
 ;; of this module for the interpreted `awful cu-arcs.scm` dev
@@ -863,8 +872,91 @@ if Major race choose 8-10")
       (h3 "Interpretation")
       (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?")
 
+      (form (@ (action "/alien-creation-markdown"))
+            (input (@ (type "submit") (value "Show as Markdown"))))
       (form (@ (action ,(main-page-path)))
             (input (@ (type "submit") (value "Start Over"))))))))
+
+;; Renders the same results as /alien-creation-result-9, as a block of
+;; Markdown text the GM can copy into their own notes. Reads
+;; everything back out of the session rather than re-deriving it,
+;; since every field here was already resolved (and $session-set!) by
+;; /alien-creation-result-9.
+(define-session-page "/alien-creation-markdown"
+  (lambda ()
+    (define major-or-minor ($session 'major-or-minor))
+    (define world-size ($session 'world-size))
+    (define atmosphere ($session 'atmosphere))
+    (define hydrographics ($session 'hydrographics))
+    (define population ($session 'population))
+    (define government ($session 'government))
+    (define law-level ($session 'law-level))
+    (define tech-level ($session 'tech-level))
+    (define starport ($session 'starport))
+    (define biotype ($session 'biotype))
+    (define subtype ($session 'subtype))
+    (define sex ($session 'sex))
+    (define reproduction ($session 'reproduction))
+    (define amphibious ($session 'amphibious))
+    (define locomotion ($session 'locomotion))
+    (define symmetry ($session 'symmetry))
+    (define legs ($session 'legs))
+    (define size ($session 'size))
+    (define str-formula ($session 'str-formula))
+    (define dex-formula ($session 'dex-formula))
+    (define end-formula ($session 'end-formula))
+    (define int-formula ($session 'int-formula))
+    (define edu-formula ($session 'edu-formula))
+    (define soc-formula ($session 'soc-formula))
+    (define armour ($session 'armour))
+    (define natural-weapon ($session 'natural-weapon))
+    (define vision ($session 'vision))
+    (define audio ($session 'audio))
+    (define olfactory ($session 'olfactory))
+    (define special-sense ($session 'special-sense))
+    (define lifespan ($session 'lifespan))
+    (define physiological-advantage ($session 'physiological-advantage))
+
+    `((h3 "Markdown")
+      (pre ,(string-append
+             "### The story so far\n\n"
+             (md-row "Major or Minor Race" major-or-minor)
+             (md-row "World Size" world-size " (" (uwp-char world-size) "): " (wt-size-name world-size))
+             (md-row "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (wt-atmosphere-name atmosphere))
+             (md-row "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (wt-hydrographics-name hydrographics))
+             (md-row "Population" population " (" (uwp-char population) "): " (wt-population-name population))
+             (md-row "Government" government " (" (uwp-char government) "): " (wt-government-name government))
+             (md-row "Law Level" law-level " (" (uwp-char law-level) "): " (wt-law-level-name law-level))
+             (md-row "Tech Level" tech-level ": " (wt-tech-level-name tech-level))
+             (md-row "Star Port" starport ": " (wt-starport-description starport))
+             (md-row "Biotype" biotype)
+             (md-row "Subtype" subtype)
+             (md-row "Sex" sex)
+             (md-row "Reproduction" reproduction)
+             (md-row "Amphibious" amphibious)
+             (md-row "Locomotion" locomotion)
+             (md-row "Symmetry" symmetry)
+             (md-row "Number of Legs" legs)
+             (md-row "Size" size)
+             (md-row "Strength" str-formula)
+             (md-row "Dexterity" dex-formula)
+             (md-row "Endurance" end-formula)
+             (md-row "Intelligence" int-formula)
+             (md-row "Education" edu-formula)
+             (md-row "Social" soc-formula)
+             (md-row "Armour" armour)
+             (md-row "Natural Weapon" natural-weapon)
+             (md-row "Vision" vision)
+             (md-row "Audio" audio)
+             (md-row "Olfactory" olfactory)
+             (md-row "Special Sense" special-sense)
+             (md-row "Lifespan" lifespan)
+             (md-row "Physiological Advantage" physiological-advantage)
+             "\n### Interpretation\n\n"
+             "Write up a summary of the alien species: what do these results say about how the race lives "
+             "today, and how has their evolution or physiology shaped their society and outlook?\n"))
+      (form (@ (action ,(main-page-path)))
+            (input (@ (type "submit") (value "Start Over")))))))
 
 (run)
 

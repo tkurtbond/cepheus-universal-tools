@@ -1,7 +1,9 @@
 * DONE Buttons for returning to the Start Page.
 cu-arcs.scm and cu-worlds.scm each needs a button on the final page that takes the user back to the start page.
-* TODO Buttons to output the results in Markdown or reStructuredtext.
-cu-arcs.scm and cu-worlds.scm each need a button on the final page that prints out the results in Markdown form and another button that prints out the results in reStructuredText.
+* DONE Button to output the results in Markdown.
+cu-arcs.scm and cu-worlds.scm each need a button on the final page that prints out the results in Markdown form.
+* TODO Button to output the results in reStructuredText.
+cu-arcs.scm and cu-worlds.scm each need a button on the final page that prints out the results in reStructuredText.
 * DONE Add stuff to .gitignore .~/ in particular.
 * Ignore this
 Local Variables:

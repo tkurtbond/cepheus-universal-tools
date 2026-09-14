@@ -13,6 +13,7 @@
 (import loop)
 (import srfi-1)
 (import srfi-13)
+(import (only (chicken format) sprintf))
 (import awful)
 (import worlds-tables)
 
@@ -28,6 +29,14 @@
 
 (define (story-table . rows)
   `(table (@ (style "border-collapse:collapse")) ,@rows))
+
+;; A "- **Label:** content" Markdown list item, mirroring story-row's
+;; label/content shape so the Markdown export tracks the HTML story
+;; table field-for-field. Content pieces are stringified the same way
+;; SXML rendering would display them (numbers, symbols, etc.).
+(define (md-row label . content)
+  (sprintf "- **~A:** ~A\n" label
+    (apply string-append (map (lambda (x) (sprintf "~A" x)) content))))
 
 ;; Registers all pages for this app. Called explicitly at the bottom
 ;; of this module for the interpreted `awful cu-worlds.scm` dev
@@ -540,8 +549,72 @@ memorable 'hook' -- a signature physical or social detail that makes this world 
       (h3 "Interpretation")
       (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?")
 
+      (form (@ (action "/world-markdown"))
+            (input (@ (type "submit") (value "Show as Markdown"))))
       (form (@ (action ,(main-page-path)))
             (input (@ (type "submit") (value "Start Over"))))))))
+
+;; Renders the same results as /world-result, as a block of Markdown
+;; text the GM can copy into their own notes. Reads everything back
+;; out of the session rather than re-deriving it, since every field
+;; here was already resolved (and $session-set!) by /world-result.
+(define-session-page "/world-markdown"
+  (lambda ()
+    (define world-name ($session 'world-name))
+    (define hex ($session 'hex))
+    (define world-size ($session 'world-size))
+    (define atmosphere ($session 'atmosphere))
+    (define hydrographics ($session 'hydrographics))
+    (define population ($session 'population))
+    (define starport ($session 'starport))
+    (define government ($session 'government))
+    (define law-level ($session 'law-level))
+    (define tech-level ($session 'tech-level))
+    (define naval-base ($session 'naval-base))
+    (define scout-base ($session 'scout-base))
+    (define gas-giant ($session 'gas-giant))
+    (define naval-base* (and (member starport '("A" "B")) naval-base))
+    (define scout-base* (and (not (member starport '("E" "X"))) scout-base))
+    (define codes (trade-codes world-size atmosphere hydrographics population))
+    (define uwp (uwp-line starport world-size atmosphere hydrographics population government law-level tech-level))
+    (define bases (bases-code naval-base* scout-base*))
+
+    `((h3 "Markdown")
+      (pre ,(string-append
+             "### The story so far\n\n"
+             (md-row "World Name" world-name)
+             (md-row "Hex" hex)
+             (md-row "World Size" world-size " (" (uwp-char world-size) "): " (size-name world-size))
+             (md-row "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (atmosphere-name atmosphere))
+             (md-row "Hydrographics" hydrographics " (" (uwp-char hydrographics) "): " (hydrographics-name hydrographics))
+             (md-row "Population" population " (" (uwp-char population) "): " (population-name population))
+             (md-row "Starport" starport ": " (starport-description starport))
+             (md-row "Government" government " (" (uwp-char government) "): " (government-name government))
+             (md-row "Law Level" law-level " (" (uwp-char law-level) "): " (law-level-name law-level))
+             (md-row "Tech Level" tech-level ": " (tech-level-name tech-level))
+             (md-row "Trade Codes" (if (null? codes) "None" (string-intersperse codes ", ")))
+             (md-row "Naval Base" (if naval-base* "Yes" "No"))
+             (md-row "Scout Base" (if scout-base* "Yes" "No"))
+             (md-row "Gas Giant Present" (if gas-giant "Yes" "No"))
+             "\n### Universal World Profile\n\n"
+             "`" (string-intersperse
+                  (filter (lambda (s) (not (string=? s "")))
+                          (list world-name hex uwp bases
+                                (if (null? codes) "" (string-intersperse codes ", "))
+                                (if gas-giant "G" "")))
+                  " ")
+             "`\n"
+             "\n### Travel Zones, Climate and a Hook (pp. 298-299)\n\n"
+             "These are Game Master judgment calls, not rolled: Travel Zones (Amber for a dangerous or unstable "
+             "world, Red for one interdicted entirely), a Climate label for the predominant temperature band "
+             "(Frozen, Cold, Cool, Temperate, Warm, Hot, Inferno, or Locked/Eccentric for a tidally-locked or "
+             "highly eccentric orbit), and a single memorable 'hook' -- a signature physical or social detail "
+             "that makes this world distinctive.\n"
+             "\n### Interpretation\n\n"
+             "Write up a summary of the world: what do these results say about its environment, economy and "
+             "society, and what makes it worth visiting (or avoiding)?\n"))
+      (form (@ (action ,(main-page-path)))
+            (input (@ (type "submit") (value "Start Over")))))))
 
 (run)
 

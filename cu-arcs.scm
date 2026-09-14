@@ -861,7 +861,10 @@ if Major race choose 8-10")
         (story-row "Lifespan" `(b ,lifespan))
         (story-row "Physiological Advantage" `(b ,physiological-advantage)))
       (h3 "Interpretation")
-      (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?")))))
+      (p "Write up a summary of the alien species: what do these results say about how the race lives today, and how has their evolution or physiology shaped their society and outlook?")
+
+      (form (@ (action ,(main-page-path)))
+            (input (@ (type "submit") (value "Start Over"))))))))
 
 (run)
 

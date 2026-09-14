@@ -538,7 +538,10 @@ Temperate, Warm, Hot, Inferno, or Locked/Eccentric for a tidally-locked or highl
 memorable 'hook' -- a signature physical or social detail that makes this world distinctive.")
 
       (h3 "Interpretation")
-      (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?")))))
+      (p "Write up a summary of the world: what do these results say about its environment, economy and society, and what makes it worth visiting (or avoiding)?")
+
+      (form (@ (action ,(main-page-path)))
+            (input (@ (type "submit") (value "Start Over"))))))))
 
 (run)
 

@@ -14,6 +14,7 @@
 (import loop)
 (import srfi-13)
 (import (only (chicken format) sprintf))
+(import (only (chicken string) string-translate*))
 (import awful)
 (import alien-tables)
 ;; Prefixed to avoid clashing with alien-tables' own D/nD/size-name --
@@ -36,13 +37,23 @@
 (define (story-table . rows)
   `(table (@ (style "border-collapse:collapse")) ,@rows))
 
-;; A "- **Label:** content" Markdown list item, mirroring story-row's
-;; label/content shape so the Markdown export tracks the HTML story
-;; table field-for-field. Content pieces are stringified the same way
-;; SXML rendering would display them (numbers, symbols, etc.).
+;; Escapes literal "|" so a field's text can't be mistaken for a
+;; Markdown pipe-table cell boundary.
+(define (md-escape s) (string-translate* s '(("|" . "\\|"))))
+
+;; A Markdown pipe-table row, mirroring story-row's label/content shape
+;; so the Markdown export tracks the HTML story table field-for-field.
+;; Pairs with md-table-header, whose alignment markers (---:/: ---)
+;; right-align the Field column and left-align the Value column, the
+;; same layout story-row gives the HTML table.
 (define (md-row label . content)
-  (sprintf "- **~A:** ~A\n" label
-    (apply string-append (map (lambda (x) (sprintf "~A" x)) content))))
+  (sprintf "| **~A** | ~A |\n" (md-escape label)
+    (md-escape (apply string-append (map (lambda (x) (sprintf "~A" x)) content)))))
+
+;; Header + alignment-marker rows for a story-so-far Markdown table;
+;; precedes a run of md-row calls.
+(define (md-table-header)
+  "| Field | Value |\n|---:|:---|\n")
 
 ;; Registers all pages for this app. Called explicitly at the bottom
 ;; of this module for the interpreted `awful cu-arcs.scm` dev
@@ -920,6 +931,7 @@ if Major race choose 8-10")
     `((h3 "Markdown")
       (pre ,(string-append
              "### The story so far\n\n"
+             (md-table-header)
              (md-row "Major or Minor Race" major-or-minor)
              (md-row "World Size" world-size " (" (uwp-char world-size) "): " (wt-size-name world-size))
              (md-row "Atmosphere" atmosphere " (" (uwp-char atmosphere) "): " (wt-atmosphere-name atmosphere))

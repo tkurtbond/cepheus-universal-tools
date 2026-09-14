@@ -1,7 +1,7 @@
 ;;; cu-worlds.scm -- Cepheus Universal Creating Worlds system.
 ;;; Generates a Universal World Profile for a single mainworld.
 ;;;
-;;; awful --port=2021 cu-worlds.scm
+;;; awful --port=8102 cu-worlds.scm
 (include "worlds-tables.scm")
 
 (module cu-worlds (run)

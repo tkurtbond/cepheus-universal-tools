@@ -1,7 +1,7 @@
 ;;; cu-arcs.scm -- Cepheus Universal Alien Race creation System.
 ;;; Creates intelligent aliens.
 ;;;
-;;; awful --port=2020 cu-arcs.scm
+;;; awful --port=8101 cu-arcs.scm
 (include "alien-tables.scm")
 (include "worlds-tables.scm")
 

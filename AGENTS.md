@@ -22,7 +22,7 @@ finished product — several files are stubs or mid-rewrite.
   book's Interpretation prompt. Breathing and Interpretation have no
   rollable table in the book and are narrative-only, with no form step.
   Run with `./cu-arcs-local.sh` (below), or directly via
-  `awful --port=2020 cu-arcs.scm` (per the file's header comment). This
+  `awful --port=8101 cu-arcs.scm` (per the file's header comment). This
   supersedes an earlier single-page v1 prototype, whose contents have
   since been replaced in place by this wizard. Each "story so far"
   summary renders as a two-column SXML table (`story-row`/`story-table`,
@@ -74,13 +74,19 @@ finished product — several files are stubs or mid-rewrite.
 
 - `cu-arcs-consp.sh` — Launcher script for `cu-arcs.scm`, bound to a
   specific external address
-  (`awful --ip-address=71.19.158.45 --port=8080 cu-arcs.scm`).
+  (`awful --ip-address=71.19.158.45 --port=8101 cu-arcs.scm`).
 
 - `cu-arcs-local.sh` — Launcher for `cu-arcs.scm` bound to
-  `127.0.0.1:8080`, for local interactive use.
+  `127.0.0.1:8101`, for local interactive use.
 
 - `cu-arcs-main.scm` — `awful-main` entry point for `cu-arcs.scm`; see
   "Static executables (awful-main)" below.
+
+- `cu-arcs-server-local.sh` — Runs the compiled `build/cu-arcs-server`
+  on port 8101 by default (an explicit `--port=...` passed to the
+  script still overrides it); see "Static executables (awful-main)"
+  below for why this wrapper -- not the binary itself -- is what
+  supplies that default.
 
 - `cu-worlds.scm` — "Cepheus Universal Creating Worlds" app. A full
   implementation of the rulebook's "Creating Worlds" section (Cepheus
@@ -101,7 +107,7 @@ finished product — several files are stubs or mid-rewrite.
   against the rulebook's own worked example, Lorcan (pp. 301-302): see
   "Lorcan worked example" in `test-worlds-tables.scm` and the second
   half of `test-worlds-e2e.sh`. Run with `./cu-worlds-local.sh` (below),
-  or directly via `awful --port=2021 cu-worlds.scm`.
+  or directly via `awful --port=8102 cu-worlds.scm`.
 
 - `worlds-tables.scm` — All the rules tables and resolvers behind
   `cu-worlds.scm`, factored out into their own Chicken module
@@ -118,11 +124,14 @@ finished product — several files are stubs or mid-rewrite.
   other Homeworld lookups below.
 
 - `cu-worlds-local.sh` — Launcher for `cu-worlds.scm` bound to
-  `127.0.0.1:8090`, for local interactive use (a different port from
-  `cu-arcs-local.sh`'s 8080, so both can run at once).
+  `127.0.0.1:8102`, for local interactive use (a different port from
+  `cu-arcs-local.sh`'s 8101, so both can run at once).
 
 - `cu-worlds-main.scm` — `awful-main` entry point for `cu-worlds.scm`; see
   "Static executables (awful-main)" below.
+
+- `cu-worlds-server-local.sh` — Runs the compiled `build/cu-worlds-server`
+  on port 8102 by default, mirroring `cu-arcs-server-local.sh`.
 
 - `cu-systems.scm` — "Cepheus Universal System Generation" app. Populates
   the rest of a star system around an already-known mainworld (Cepheus
@@ -154,7 +163,7 @@ finished product — several files are stubs or mid-rewrite.
   re-rolled — every render after that (the result page, both Markdown
   exports) reads them back via `system-data`. Run with
   `./cu-systems-local.sh` (below), or directly via
-  `awful --port=2022 cu-systems.scm`.
+  `awful --port=8103 cu-systems.scm`.
 
 - `system-tables.scm` — All the rules tables and resolvers behind
   `cu-systems.scm`, factored out into their own Chicken module
@@ -165,12 +174,15 @@ finished product — several files are stubs or mid-rewrite.
   as `cu-arcs.scm`'s Homeworld step.
 
 - `cu-systems-local.sh` — Launcher for `cu-systems.scm` bound to
-  `127.0.0.1:8091`, for local interactive use (a different port from
-  `cu-arcs-local.sh`'s 8080 and `cu-worlds-local.sh`'s 8090, so all
+  `127.0.0.1:8103`, for local interactive use (a different port from
+  `cu-arcs-local.sh`'s 8101 and `cu-worlds-local.sh`'s 8102, so all
   three can run at once).
 
 - `cu-systems-main.scm` — `awful-main` entry point for `cu-systems.scm`;
   see "Static executables (awful-main)" below.
+
+- `cu-systems-server-local.sh` — Runs the compiled `build/cu-systems-server`
+  on port 8103 by default, mirroring `cu-arcs-server-local.sh`.
 
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
   marked "Just a reminder, for now." Stub module that only imports
@@ -215,7 +227,7 @@ finished product — several files are stubs or mid-rewrite.
   correctness), plus a few deterministic boundary cases via the "Choose"
   path (e.g. Major Race Starport is always "A" regardless of roll). Run
   with `./test-e2e.sh`; it starts and tears down its own server, so it
-  won't collide with `cu-arcs-local.sh` on port 8080.
+  won't collide with `cu-arcs-local.sh` on port 8101.
 
 - `test-worlds-tables.scm` — Unit tests for `worlds-tables.scm`, mirroring
   `test-alien-tables.scm`'s approach: exact expected values for the
@@ -307,6 +319,17 @@ the `awful-main` egg (`chicken-install awful-main`; also requires
   `build/` (gitignored) as `build/cu-arcs-server`, `build/cu-worlds-server`
   and `build/cu-systems-server`, alongside an empty `build/static/` (the
   default `--web-root`). `make run-arcs` / `make run-worlds` /
-  `make run-systems` build (if needed) and run one directly; `make clean`
-  removes `build/`. To build by hand: `csc -static -o build/cu-arcs-server
-  cu-arcs-main.scm` (same pattern for the other two).
+  `make run-systems` build (if needed) and run one directly on its
+  standard port (8101/8102/8103); `make clean` removes `build/`. To
+  build by hand: `csc -static -o build/cu-arcs-server cu-arcs-main.scm`
+  (same pattern for the other two).
+- awful-main's own default port (8080) is hardcoded inside the egg's
+  functor body -- there's no hook for a calling module like
+  `cu-arcs-main.scm` to change it, so a bare `build/cu-arcs-server` with
+  no arguments always binds to 8080, not 8101. `cu-arcs-server-local.sh`
+  / `cu-worlds-server-local.sh` / `cu-systems-server-local.sh` are thin
+  wrappers that supply each app's standard port (8101/8102/8103)
+  themselves and then forward any of their own arguments; an explicit
+  `--port=...` passed to the wrapper still wins, since awful-main's
+  argument parser is a simple left-to-right pass where the last
+  `--port=` seen is the one that sticks.

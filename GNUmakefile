@@ -39,13 +39,13 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)/static
 
 run-arcs: $(BUILD_DIR)/cu-arcs-server
-	$(BUILD_DIR)/cu-arcs-server --port=2020
+	$(BUILD_DIR)/cu-arcs-server --port=8101
 
 run-worlds: $(BUILD_DIR)/cu-worlds-server
-	$(BUILD_DIR)/cu-worlds-server --port=2021
+	$(BUILD_DIR)/cu-worlds-server --port=8102
 
 run-systems: $(BUILD_DIR)/cu-systems-server
-	$(BUILD_DIR)/cu-systems-server --port=2022
+	$(BUILD_DIR)/cu-systems-server --port=8103
 
 test: test-unit test-e2e
 

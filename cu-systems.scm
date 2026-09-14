@@ -1,7 +1,7 @@
 ;;; cu-systems.scm -- Cepheus Universal System Generation.
 ;;; Populates the rest of a star system around an existing mainworld.
 ;;;
-;;; awful --port=2022 cu-systems.scm
+;;; awful --port=8103 cu-systems.scm
 (include "worlds-tables.scm")
 (include "system-tables.scm")
 

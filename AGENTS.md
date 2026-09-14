@@ -124,6 +124,54 @@ finished product — several files are stubs or mid-rewrite.
 - `cu-worlds-main.scm` — `awful-main` entry point for `cu-worlds.scm`; see
   "Static executables (awful-main)" below.
 
+- `cu-systems.scm` — "Cepheus Universal System Generation" app. Populates
+  the rest of a star system around an already-known mainworld (Cepheus
+  Universal pp. 303-307): Orbits & Other Stars (2D6+2 planetary bodies;
+  2D6 for Single/Binary/Trinary, then 1D6 to place any companion(s) at
+  Orbit 1 or beyond the furthest planetary body) → Mainworld Orbit
+  (1D3+2) & Type (2D6: Rock/Hellhole/Desert World/Garden World/
+  Waterworld) → either a full Creating Worlds UWP (Garden World/
+  Waterworld, which have no Planetary Details row) or the coarser
+  Planetary Details sub-rolls (Rock/Hellhole/Desert World: Size,
+  Atmosphere, Hydrographics, with Temperature forced to Temperate for
+  the mainworld's own orbit) → the rest of the system generated in one
+  shot (gas giants, including the "reroll on 6 + hot Jupiter at Orbit 1"
+  case; asteroid belts; minor planets typed and detailed per the Other
+  Planetary Types/Planetary Details tables) and shown as an Orbit/Body/
+  Notes table matching the book's own worked-example layout, with
+  bodies named "<hex> <Greek letter>" per p. 305 (`greek-letter-name`).
+  Two rulebook ambiguities get a documented house-ruled resolution
+  rather than being left to crash or silently misbehave: mainworld-orbit
+  (3-5) can exceed a minimum num-bodies (4) roll, so num-bodies widens
+  to fit it; and a companion star's "beyond the furthest body" orbit is
+  fixed before the mainworld orbit is even rolled, so a collision
+  between the two shifts the mainworld outward one orbit at a time
+  (`resolve-mainworld-orbit`) — see the comments at both call sites and
+  in `system-tables.scm`. Deliberately text-only, no rendered subsector
+  map (p. 307's "SOL SUBSECTOR" is a map image with no extractable rules
+  content, unlike the rest of the section). `bodies`/`moon-of` are
+  generated once (`finish-system!`) and `$session-set!`, not
+  re-rolled — every render after that (the result page, both Markdown
+  exports) reads them back via `system-data`. Run with
+  `./cu-systems-local.sh` (below), or directly via
+  `awful --port=2022 cu-systems.scm`.
+
+- `system-tables.scm` — All the rules tables and resolvers behind
+  `cu-systems.scm`, factored out into their own Chicken module
+  (`system-tables`), mirroring `alien-tables.scm`'s split from
+  `cu-arcs.scm`. `D`/`nD` live here too; Rock/Hellhole/Desert World
+  Planetary Details cells marked "*" in the book defer to
+  `worlds-tables.scm`'s own tables (imported with a `wt-` prefix), same
+  as `cu-arcs.scm`'s Homeworld step.
+
+- `cu-systems-local.sh` — Launcher for `cu-systems.scm` bound to
+  `127.0.0.1:8091`, for local interactive use (a different port from
+  `cu-arcs-local.sh`'s 8080 and `cu-worlds-local.sh`'s 8090, so all
+  three can run at once).
+
+- `cu-systems-main.scm` — `awful-main` entry point for `cu-systems.scm`;
+  see "Static executables (awful-main)" below.
+
 - `sa-acs.scm` — "Stellar Adventures Alien Creation System." Explicitly
   marked "Just a reminder, for now." Stub module that only imports
   libraries (including `awful`) but defines nothing yet — a placeholder
@@ -145,9 +193,9 @@ finished product — several files are stubs or mid-rewrite.
   different system (OVA, a diceless/dice-pool anime RPG) rather than
   Cepheus itself.
 
-- `GNUmakefile` — Builds standalone static executables for `cu-arcs.scm`
-  and `cu-worlds.scm` via the `awful-main` egg; see "Static executables
-  (awful-main)" below.
+- `GNUmakefile` — Builds standalone static executables for `cu-arcs.scm`,
+  `cu-worlds.scm` and `cu-systems.scm` via the `awful-main` egg; see
+  "Static executables (awful-main)" below.
 
 ## Testing
 
@@ -185,15 +233,36 @@ finished product — several files are stubs or mid-rewrite.
   ("Lorcan E5A6595-8 Fluid Oceans, Non-Industrial G"). Run with
   `./test-worlds-e2e.sh`.
 
-There is no test coverage for `cu-arcs.scm` or `cu-worlds.scm` themselves
-(the `awful`/HTML web layer — the `test-*-e2e.sh` scripts exercise them
-indirectly over HTTP), `tables.scm`, `sa-acs.scm`, or `dice.scm`.
+- `test-system-tables.scm` — Unit tests for `system-tables.scm`. The
+  name/descriptor tables (`star-count-name`, `mainworld-type-name`,
+  `greek-letter-name`, `inner-planet-type`, `outer-planet-type`) get
+  exact expected values; `companion-orbits` and `resolve-mainworld-orbit`
+  take their die roll as an explicit argument, so those do too. Every
+  dice-rolling resolver (including `generate-system` itself) is checked
+  with repeated trials against the valid range/invariants instead, since
+  the book's own "Example Uninhabited Star System LR806" (p. 305) and
+  "The Solar System" (p. 306) worked examples don't state intermediate
+  rolls the way Lorcan's does. Run with `csi -s test-system-tables.scm`.
 
-`GNUmakefile` also has targets for all four: `make test` runs everything;
-`make test-unit` runs just the two unit-test files; `make test-e2e` runs
-just the two end-to-end scripts; `make test-alien-tables`,
-`make test-worlds-tables`, `make test-e2e-arcs`, and `make test-e2e-worlds`
-run one each.
+- `test-systems-e2e.sh` — End-to-end smoke test for `cu-systems.scm`, on
+  port 18083: a single-star "Roll everything" walkthrough, a single-star
+  Rock mainworld walked via "Choose" (checking the Planetary Details
+  branch and that both Markdown exports reproduce the same
+  already-generated system rather than rerolling it), and a binary-star
+  (companion at Orbit 1) Garden World mainworld walked via "Choose"
+  (checking the companion-placement and full-UWP branches, including the
+  exact resulting UWP line). Run with `./test-systems-e2e.sh`.
+
+There is no test coverage for `cu-arcs.scm`, `cu-worlds.scm` or
+`cu-systems.scm` themselves (the `awful`/HTML web layer — the
+`test-*-e2e.sh` scripts exercise them indirectly over HTTP), `tables.scm`,
+`sa-acs.scm`, or `dice.scm`.
+
+`GNUmakefile` also has targets for all six: `make test` runs everything;
+`make test-unit` runs the three unit-test files; `make test-e2e` runs all
+three end-to-end scripts; `make test-alien-tables`, `make test-worlds-tables`,
+`make test-system-tables`, `make test-e2e-arcs`, `make test-e2e-worlds`,
+and `make test-e2e-systems` run one each.
 
 ## Local modules
 
@@ -208,33 +277,36 @@ deliberately isn't wrapped in a module — it's just `(include
 
 ## Static executables (awful-main)
 
-`cu-arcs.scm` and `cu-worlds.scm` can also be built into standalone
-binaries (no Chicken install needed to run them) using the `awful-main`
-egg (`chicken-install awful-main`; also requires `spiffy`, already an
-`awful` dependency):
+`cu-arcs.scm`, `cu-worlds.scm` and `cu-systems.scm` can also be built
+into standalone binaries (no Chicken install needed to run them) using
+the `awful-main` egg (`chicken-install awful-main`; also requires
+`spiffy`, already an `awful` dependency):
 
-- `cu-arcs-main.scm` / `cu-worlds-main.scm` are the `awful-main` entry
-  points: each `(include ...)` its app's `.scm` file, then instantiates
-  the `(awful main)` functor over that app's module (e.g. `(module main
-  = ((awful main) cu-arcs))`). `awful-main` generates the CLI parsing
-  (`--addr`, `--port`, `--access-log`, `--web-root`, `--dev`, etc.) and
-  startup wiring around the app.
+- `cu-arcs-main.scm` / `cu-worlds-main.scm` / `cu-systems-main.scm` are
+  the `awful-main` entry points: each `(include ...)` its app's `.scm`
+  file, then instantiates the `(awful main)` functor over that app's
+  module (e.g. `(module main = ((awful main) cu-arcs))`). `awful-main`
+  generates the CLI parsing (`--addr`, `--port`, `--access-log`,
+  `--web-root`, `--dev`, etc.) and startup wiring around the app.
 - The functor requires the app's module to export a `run` procedure,
   which it calls *from inside* `awful-start`'s startup thunk — pages
   registered any earlier (e.g. purely as top-level side effects of
-  importing the module) don't take effect. So both `cu-arcs.scm` and
-  `cu-worlds.scm` wrap all their `define-session-page` forms in
-  `(define (run . args) ...)`, exported from the module, and then call
-  `(run)` once more at the very bottom of the module body (outside
-  `run`'s definition). That bottom-level call is what registers pages
-  for the plain interpreted `awful cu-arcs.scm` dev workflow, which
-  never calls `run` itself; the compiled binary calls `run` a second
-  time via `awful-start`, which is harmless (just re-registers the same
-  handlers).
-- Build both with `make` (see `GNUmakefile`); executables land in
-  `build/` (gitignored) as `build/cu-arcs-server` and
-  `build/cu-worlds-server`, alongside an empty `build/static/`
-  (the default `--web-root`). `make run-arcs` / `make run-worlds` build
-  (if needed) and run one directly; `make clean` removes `build/`.
-  To build by hand: `csc -static -o build/cu-arcs-server
-  cu-arcs-main.scm` (same pattern for `cu-worlds`).
+  importing the module, or of a helper function defined only *after*
+  the `define-session-page` that references it — awful's macro doesn't
+  resolve that kind of forward reference the way plain internal defines
+  do) don't take effect. So every app wraps all its `define-session-page`
+  calls, and every helper those pages call, in `(define (run . args)
+  ...)` — helpers defined before the pages that use them — exported from
+  the module, and then calls `(run)` once more at the very bottom of the
+  module body (outside `run`'s definition). That bottom-level call is
+  what registers pages for the plain interpreted `awful cu-arcs.scm` dev
+  workflow, which never calls `run` itself; the compiled binary calls
+  `run` a second time via `awful-start`, which is harmless (just
+  re-registers the same handlers).
+- Build all three with `make` (see `GNUmakefile`); executables land in
+  `build/` (gitignored) as `build/cu-arcs-server`, `build/cu-worlds-server`
+  and `build/cu-systems-server`, alongside an empty `build/static/` (the
+  default `--web-root`). `make run-arcs` / `make run-worlds` /
+  `make run-systems` build (if needed) and run one directly; `make clean`
+  removes `build/`. To build by hand: `csc -static -o build/cu-arcs-server
+  cu-arcs-main.scm` (same pattern for the other two).
